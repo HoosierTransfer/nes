@@ -13,5 +13,7 @@ public:
     uint16_t readWord(uint16_t address);
     void write(uint16_t address, uint8_t data);
     void writeWord(uint16_t address, uint16_t data);
-    void writeBytes(uint16_t address, uint8_t* data, size_t size);
+    void writeBytes(uint16_t address, uint8_t* data, long size);
+private:
+    uint8_t* memory;
 };
