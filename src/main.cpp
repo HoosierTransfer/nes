@@ -88,15 +88,27 @@ int main() {
     //     std::chrono::duration<float> deltaTime = currentTime - lastTime;
     //     lastTime = currentTime;
 
-    //     // if (update) {
-    //     //     SDL_UpdateTexture(texture, nullptr, frame, 32 * 3);
-    //     //     SDL_RenderCopy(renderer, texture, nullptr, nullptr);
-    //     //     SDL_RenderPresent(renderer);
-    //     // }
+    //     int frame_idx = 0;
+    //     bool update = false;
+    //     for (int i = 0x0200; i < 0x600; ++i) {
+    //         uint8_t color_idx = system->bus->read(static_cast<uint16_t>(i));
+    //         SDL_Color color = getColor(color_idx);
+    //         if (frame[frame_idx] != color.r || frame[frame_idx + 1] != color.g || frame[frame_idx + 2] != color.b) {
+    //             frame[frame_idx] = color.r;
+    //             frame[frame_idx + 1] = color.g;
+    //             frame[frame_idx + 2] = color.b;
+    //             update = true;
+    //         }
+    //         frame_idx += 3;
+    //     }
 
-    //     // use deltatime to control the speed of the emulator. we want the clock to run at 1.79 MHz
+    //     if (update) {
+    //         SDL_UpdateTexture(texture, nullptr, frame, 32 * 3);
+    //         SDL_RenderCopy(renderer, texture, nullptr, nullptr);
+    //         SDL_RenderPresent(renderer);
+    //     }
     
-    //     for (int i = 0; i < 5; i++) {
+    //     for (int i = 0; i < 6; i++) {
     //         system->step();
     //     }
 

@@ -5,7 +5,7 @@
 
 using namespace Rom;
 
-void Rom::loadRom(const char* path, Memory* memory) {
+void Rom::loadRom(const char* path, Bus* memory, PPU* ppu) {
     std::ifstream file;
     file.open(path, std::ios::binary | std::ios::in);
 
@@ -30,6 +30,9 @@ void Rom::loadRom(const char* path, Memory* memory) {
     uint8_t* chr_rom = new uint8_t[chrSize];
     file.read((char*)prg_rom, prgSize);
     file.read((char*)chr_rom, chrSize);
+
+    ppu->setChrRom(chr_rom, chrSize);
+    ppu->setMirror(verticalMirroring ? Mirroring::VERTICAL : Mirroring::HORIZONTAL);
 
     if (mapper == 0) {
         memory->writeBytes(0x8000, prg_rom, prgSize);

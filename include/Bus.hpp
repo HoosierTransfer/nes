@@ -2,9 +2,11 @@
 
 #include <cstdint>
 
+#include <PPU.hpp>
+
 class Bus {
 public:
-    Bus();
+    Bus(PPU* ppu);
     ~Bus();
 
     void write(uint16_t address, uint8_t data);
@@ -20,4 +22,5 @@ public:
 private:
     uint8_t* cpuMemory;
     uint8_t* prgMemory;
+    PPU* ppu;
 };

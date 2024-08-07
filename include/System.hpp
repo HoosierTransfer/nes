@@ -3,7 +3,8 @@
 #include <cstdint>
 
 #include <CPU.hpp>
-#include <Memory.hpp>
+#include <Bus.hpp>
+#include <PPU.hpp>
 
 class System {
 public:
@@ -11,8 +12,8 @@ public:
     bool stop;
 
     CPU* cpu;
-
-    Memory* bus;
+    Bus* bus;
+    PPU* ppu;
 
     uint64_t masterCycles;
     System();

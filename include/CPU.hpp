@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <Memory.hpp>
+#include <Bus.hpp>
 #include <vector>
 #include <string>
 
@@ -35,9 +35,9 @@ public:
 
     uint64_t cycles;
 
-    Memory* memory;
+    Bus* memory;
 
-    CPU(Memory* memory);
+    CPU(Bus* memory);
 
     void powerOn();
     void reset();
@@ -117,4 +117,6 @@ private:
 
     uint8_t indirectAddr1;
     uint16_t indirectAddr2;
+
+    bool pageCrossed;
 };
