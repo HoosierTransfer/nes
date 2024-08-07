@@ -212,30 +212,55 @@ uint8_t wrapingAdd(uint8_t a, uint8_t b) {
     return result & 0xFF;
 }
 
+// i messed up so instead of imm returning the program counter it returns the value at the program counter
 uint16_t CPU::getAddress(AddressingMode mode) {
     switch (mode) {
+        case AddressingMode::ACC:
+            stepCpu(2);
+            return 0;
         case AddressingMode::IMP:
+            stepCpu(2);
             return 0;
         case AddressingMode::IMM:
-            return programCounter;
+            stepCpu(2);
+            return fetch();
         case AddressingMode::ZP0:
+            stepCpu(3);
             return fetch();
         case AddressingMode::ZPX:
+            stepCpu(4);
             return (fetch() + xIndex) & 0xFF;
         case AddressingMode::ZPY:
+            stepCpu(4);
             return (fetch() + yIndex) & 0xFF;
         case AddressingMode::REL:
             return programCounter + (int8_t)fetch();
         case AddressingMode::ABS:
+            stepCpu(4);
             return fetchWord();
         case AddressingMode::ABX:
-            return fetchWord() + xIndex;
-        case AddressingMode::ABY:
-            return fetchWord() + yIndex;
+            {
+                uint16_t addr = fetchWord();
+                if (mode == AddressingMode::ABX && (addr & 0xFF00) != ((addr + xIndex) & 0xFF00)) {
+                    stepCpu(1);
+                }
+                stepCpu(4);
+                return addr + xIndex;
+            }
+        case AddressingMode::ABY: 
+            {
+                uint16_t addr = fetchWord();
+                if (mode == AddressingMode::ABY && (addr & 0xFF00) != ((addr + yIndex) & 0xFF00)) {
+                    stepCpu(1);
+                }
+                stepCpu(4);
+                return addr + yIndex;
+            }
         case AddressingMode::IND:
             return memory->read(getAddress(AddressingMode::ABS));
         case AddressingMode::IZX:
             {
+                stepCpu(6);
                 uint8_t addr = fetch();
                 return memory->read((addr + xIndex) & 0xFF) + (uint16_t(memory->read((addr + xIndex + 1) & 0xFF)) << 8);
             }
@@ -246,14 +271,68 @@ uint16_t CPU::getAddress(AddressingMode mode) {
                 uint8_t hi = memory->read((base + 1) & 0xFF);
 
                 uint16_t deref_base = ((uint16_t)lo) | ((uint16_t)hi << 8);
-                indirectAddr1 = deref_base;
                 uint16_t deref = deref_base + yIndex;
-                indirectAddr2 = deref;
-                miscValue = memory->read(deref);
+                if ((deref_base & 0xFF00) != (deref & 0xFF00)) {
+                    stepCpu(1);
+                }
+                stepCpu(5);
                 return deref;
             }
     }
     return 0;
+}
+
+std::string CPU::getAddressWithMode(AddressingMode mode) {
+    std::stringstream ss;
+    ss << std::uppercase;
+    switch (mode) {
+        case AddressingMode::IMP:
+            break;
+        case AddressingMode::ACC:
+            ss << "A";
+            break;
+        case AddressingMode::IMM:
+            ss << "#$" << std::hex << std::setw(2) << std::setfill('0') << (int)fetchLogs[1];
+            break;
+        case AddressingMode::ZP0:
+            ss << "$" << std::hex << std::setw(2) << std::setfill('0') << (int)fetchLogs[1];
+            break;
+        case AddressingMode::ZPX:
+            ss << "$" << std::hex << std::setw(2) << std::setfill('0') << (int)fetchLogs[1] << ",X";
+            break;
+        case AddressingMode::ZPY:
+            ss << "$" << std::hex << std::setw(2) << std::setfill('0') << (int)fetchLogs[1] << ",Y";
+            break;
+        case AddressingMode::REL:
+            ss << "$" << std::hex << std::setw(4) << std::setfill('0') << (int)branchLocation;
+            break;
+        case AddressingMode::ABS:
+            ss << "$" << std::hex << std::setw(4) << std::setfill('0') << (int)fetchLogs[1] + (fetchLogs[2] << 8);
+            break;
+        case AddressingMode::ABX:
+            ss << "$" << std::hex << std::setw(4) << std::setfill('0') << (int)fetchLogs[1] + (fetchLogs[2] << 8) << ",X";
+            break;
+        case AddressingMode::ABY:
+            ss << "$" << std::hex << std::setw(4) << std::setfill('0') << (int)fetchLogs[1] + (fetchLogs[2] << 8) << ",Y";
+            break;
+        case AddressingMode::IND:
+            ss << "($" << std::hex << std::setw(4) << std::setfill('0') << (int)fetchLogs[1] + (fetchLogs[2] << 8) << ")";
+            break;
+        case AddressingMode::IZX:
+            ss << "($" << std::hex << std::setw(2) << std::setfill('0') << (int)fetchLogs[1] << ",X)";
+            break;
+        case AddressingMode::IZY:
+            ss << "($" << std::hex << std::setw(2) << std::setfill('0') << (int)fetchLogs[1] << "),Y";
+            break;
+        case AddressingMode::NOP:
+            break;
+    }
+
+    return ss.str();
+}
+
+std::string CPU::getInstruction() {
+    return "";
 }
 
 void CPU::execOnce() {
@@ -262,14 +341,7 @@ void CPU::execOnce() {
         return;
     }
     uint8_t opcode = fetch();
-    // print registers
-    // std::cout << "PC: " << std::hex << (int)programCounter;
-    // std::cout << " A: " << std::hex << (int)accumulator;
-    // std::cout << " X: " << std::hex << (int)xIndex;
-    // std::cout << " Y: " << std::hex << (int)yIndex;
-    // std::cout << " SP: " << std::hex << (int)stackPointer;
-    // std::cout << " Flags: " << std::hex << (int)flags << std::endl;
-    // std::cout << "Opcode: " << std::hex << (int)opcode << std::dec << std::endl;
+
     switch (opcode) {
         case 0x00: // BRK
             programCounter++;
@@ -281,16 +353,11 @@ void CPU::execOnce() {
             break;
         case 0x01: // ORA Indexed, Indirect
             {
-                uint8_t addr = fetch();
-                indirectAddr1 = (addr + xIndex) & 0xff;
-                uint16_t address = memory->read((addr + xIndex) & 0xff) + (uint16_t(memory->read((addr + xIndex + 1) & 0xff)) << 8);
-                indirectAddr2 = address;
+                uint16_t address = getAddress(AddressingMode::IZX);
                 accumulator |= memory->read(address);
-                miscValue = memory->read(address);
                 setZero(accumulator == 0);
                 setNegative(accumulator & 0x80);
             }
-            stepCpu(6);
             break;
 
         case 0x02: // Illegal KIL
@@ -318,23 +385,22 @@ void CPU::execOnce() {
             break;
 
         case 0x05: // ORA Zero Page
-            miscValue = memory->read(fetchNoAdvance());
             accumulator |= memory->read(getAddress(AddressingMode::ZP0));
             setZero(accumulator == 0);
             setNegative(accumulator & 0x80);
-            stepCpu(3);
             break;
         
         case 0x06: // ASL Zero Page
             {
-                uint8_t data = memory->read(fetchNoAdvance());
+                uint16_t address = getAddress(AddressingMode::ZP0);
+                uint8_t data = memory->read(address);
                 setCarry(data & 0x80);
                 data <<= 1;
                 setZero(data == 0);
                 setNegative(data & 0x80);
-                memory->write(fetch(), data);
+                memory->write(address, data);
             }
-            stepCpu(5);
+            stepCpu(2);
             break;
 
         case 0x07: // Illegal *SLO Zero Page
@@ -358,10 +424,9 @@ void CPU::execOnce() {
             break;
 
         case 0x09: // ORA Immediate
-            accumulator |= fetch();
+            accumulator |= getAddress(AddressingMode::IMM);
             setZero(accumulator == 0);
             setNegative(accumulator & 0x80);
-            stepCpu(2);
             break;
 
         case 0x0A: // ASL Accumulator
@@ -369,7 +434,7 @@ void CPU::execOnce() {
             accumulator <<= 1;
             setZero(accumulator == 0);
             setNegative(accumulator & 0x80);
-            stepCpu(2);
+            stepCpu(2); 
             break;
 
         case 0x0B: // Illegal ANC Immediate
@@ -388,12 +453,11 @@ void CPU::execOnce() {
             accumulator |= memory->read(getAddress(AddressingMode::ABS));
             setZero(accumulator == 0);
             setNegative(accumulator & 0x80);
-            stepCpu(4);
             break;
 
         case 0x0E: // ASL Absolute
             {
-                uint16_t address = fetchWord();
+                uint16_t address = getAddress(AddressingMode::ABS);
                 uint8_t data = memory->read(address);
                 setCarry(data & 0x80);
                 data <<= 1;
@@ -401,7 +465,7 @@ void CPU::execOnce() {
                 setNegative(data & 0x80);
                 memory->write(address, data);
             }
-            stepCpu(6);
+            stepCpu(2);
             break;
 
         case 0x0F: // Illegal *SLO Absolute
@@ -437,17 +501,11 @@ void CPU::execOnce() {
 
         case 0x11: // ORA Indirect, Indexed
             {
-                uint8_t base = fetch();
-                uint16_t deref_base = (uint16_t(memory->read((base + 1) & 0xff)) << 8) | memory->read(base);
-                uint8_t data = memory->read(deref_base + yIndex);
+                uint8_t data = memory->read(getAddress(AddressingMode::IZY));
                 accumulator |= data;
-                if ((deref_base & 0xFF00) != ((deref_base + yIndex) & 0xFF00)) {
-                    stepCpu(1);
-                }
                 setZero(accumulator == 0);
                 setNegative(accumulator & 0x80);
             }
-            stepCpu(5);
             break;
 
         case 0x12: // Illegal KIL
@@ -477,7 +535,6 @@ void CPU::execOnce() {
             accumulator |= memory->read(getAddress(AddressingMode::ZPX));
             setZero(accumulator == 0);
             setNegative(accumulator & 0x80);
-            stepCpu(4);
             break;
 
         case 0x16: // ASL Zero Page, X
@@ -490,7 +547,7 @@ void CPU::execOnce() {
                 setNegative(data & 0x80);
                 memory->write(address, data);
             }
-            stepCpu(6);
+            stepCpu(2);
             break;
 
         case 0x17: // Illegal *SLO Zero Page, X
@@ -543,15 +600,10 @@ void CPU::execOnce() {
 
         case 0x1D: // ORA Absolute, X
             {
-                uint16_t base = fetchWord();
-                accumulator |= memory->read(base + xIndex);
-                if ((base & 0xFF00) != ((base + xIndex) & 0xFF00)) {
-                    stepCpu(1);
-                }
+                accumulator |= memory->read(getAddress(AddressingMode::ABX));
                 setZero(accumulator == 0);
                 setNegative(accumulator & 0x80);
             }
-            stepCpu(4);
             break;
 
         case 0x1E: // ASL Absolute, X
@@ -590,13 +642,11 @@ void CPU::execOnce() {
 
         case 0x21: // AND Indexed, Indirect
             {
-                uint8_t addr = fetch();
-                uint16_t address = memory->read((addr + xIndex) & 0xff) + (uint16_t(memory->read((addr + xIndex + 1) & 0xff)) << 8);
+                uint16_t address = getAddress(AddressingMode::IZX);
                 accumulator &= memory->read(address);
                 setZero(accumulator == 0);
                 setNegative(accumulator & 0x80);
             }
-            stepCpu(6);
             break;
 
         case 0x22: // Illegal KIL
@@ -628,19 +678,17 @@ void CPU::execOnce() {
                 setOverflow(data & 0x40);
                 setNegative(data & 0x80);
             }
-            stepCpu(3);
             break;
 
         case 0x25: // AND Zero Page
             accumulator &= memory->read(getAddress(AddressingMode::ZP0));
             setZero(accumulator == 0);
             setNegative(accumulator & 0x80);
-            stepCpu(3);
             break;
 
         case 0x26: // ROL Zero Page
             {
-                uint16_t address = fetch();
+                uint16_t address = getAddress(AddressingMode::ZP0);
                 uint8_t data = memory->read(address);
                 uint8_t carry = getCarry();
                 setCarry(data & 0x80);
@@ -650,7 +698,7 @@ void CPU::execOnce() {
                 setNegative(data & 0x80);
                 memory->write(address, data);
             }
-            stepCpu(5);
+            stepCpu(2);
             break;
 
         case 0x27: // Illegal *RLA Zero Page
@@ -680,7 +728,6 @@ void CPU::execOnce() {
             accumulator &= getAddress(AddressingMode::IMM);
             setZero(accumulator == 0);
             setNegative(accumulator & 0x80);
-            stepCpu(2);
             break;
 
         case 0x2A: // ROL Accumulator
@@ -702,19 +749,17 @@ void CPU::execOnce() {
                 setOverflow(data & 0x40);
                 setNegative(data & 0x80);
             }
-            stepCpu(4);
             break;
 
         case 0x2D: // AND Absolute
             accumulator &= memory->read(getAddress(AddressingMode::ABS));
             setZero(accumulator == 0);
             setNegative(accumulator & 0x80);
-            stepCpu(4);
             break;
 
         case 0x2E: // ROL Absolute
             {
-                uint16_t address = fetchWord();
+                uint16_t address = getAddress(AddressingMode::ABS);
                 uint8_t data = memory->read(address);
                 uint8_t carry = getCarry();
                 setCarry(data & 0x80);
@@ -724,7 +769,7 @@ void CPU::execOnce() {
                 setNegative(data & 0x80);
                 memory->write(address, data);
             }
-            stepCpu(6);
+            stepCpu(2);
             break;
 
         case 0x2F: // Illegal *RLA Absolute
@@ -762,17 +807,12 @@ void CPU::execOnce() {
 
         case 0x31: // AND Indirect, Indexed
             {
-                uint8_t base = fetch();
-                uint16_t deref_base = (uint16_t(memory->read((base + 1) & 0xff)) << 8) | memory->read(base);
-                uint8_t data = memory->read(deref_base + yIndex);
-                if ((deref_base & 0xFF00) != ((deref_base + yIndex) & 0xFF00)) {
-                    stepCpu(1);
-                }
+                uint16_t address = getAddress(AddressingMode::IZY);
+                uint8_t data = memory->read(address);
                 accumulator &= data;
                 setZero(accumulator == 0);
                 setNegative(accumulator & 0x80);
             }
-            stepCpu(5);
             break;
 
         case 0x32: // Illegal KIL
@@ -804,7 +844,6 @@ void CPU::execOnce() {
             accumulator &= memory->read(getAddress(AddressingMode::ZPX));
             setZero(accumulator == 0);
             setNegative(accumulator & 0x80);
-            stepCpu(4);
             break;
 
         case 0x36: // ROL Zero Page, X
@@ -819,7 +858,7 @@ void CPU::execOnce() {
                 setNegative(data & 0x80);
                 memory->write(address, data);
             }
-            stepCpu(6);
+            stepCpu(2);
             break;
 
         case 0x37: // Illegal *RLA Zero Page, X
@@ -846,15 +885,11 @@ void CPU::execOnce() {
 
         case 0x39: // AND Absolute, Y
             {
-                uint16_t base = fetchWord();
-                accumulator &= memory->read(base + yIndex);
-                if ((base & 0xFF00) != ((base + yIndex) & 0xFF00)) {
-                    stepCpu(1);
-                }
+                uint16_t address = getAddress(AddressingMode::ABY);
+                accumulator &= memory->read(address);
                 setZero(accumulator == 0);
                 setNegative(accumulator & 0x80);
             }
-            stepCpu(4);
             break;
 
         case 0x3A: // Illegal NOP
@@ -883,15 +918,11 @@ void CPU::execOnce() {
 
         case 0x3D:  // AND Absolute, X
             {
-                uint16_t base = fetchWord();
-                accumulator &= memory->read(base + xIndex);
-                if ((base & 0xFF00) != ((base + xIndex) & 0xFF00)) {
-                    stepCpu(1);
-                }
+                uint16_t address = getAddress(AddressingMode::ABX);
+                accumulator &= memory->read(address);
                 setZero(accumulator == 0);
                 setNegative(accumulator & 0x80);
             }
-            stepCpu(4);
             break;
 
         case 0x3E: // ROL Absolute, X
@@ -934,16 +965,11 @@ void CPU::execOnce() {
 
         case 0x41: // EOR Indexed, Indirect
             {
-                uint8_t addr = fetch();
-                indirectAddr1 = (addr + xIndex) & 0xff;
-                uint16_t address = memory->read((addr + xIndex) & 0xff) + (uint16_t(memory->read((addr + xIndex + 1) & 0xff)) << 8);
-                indirectAddr2 = address;
-                miscValue = memory->read(address);
+                uint16_t address = getAddress(AddressingMode::IZX);
                 accumulator ^= memory->read(address);
                 setZero(accumulator == 0);
                 setNegative(accumulator & 0x80);
             }
-            stepCpu(6);
             break;
 
         case 0x42: // Illegal KIL
@@ -974,12 +1000,11 @@ void CPU::execOnce() {
             accumulator ^= memory->read(getAddress(AddressingMode::ZP0));
             setZero(accumulator == 0);
             setNegative(accumulator & 0x80);
-            stepCpu(3);
             break;
 
         case 0x46: // LSR Zero Page
             {
-                uint16_t address = fetch();
+                uint16_t address = getAddress(AddressingMode::ZP0);
                 uint8_t data = memory->read(address);
                 setCarry(data & 0x01);
                 data >>= 1;
@@ -987,7 +1012,7 @@ void CPU::execOnce() {
                 setNegative(data & 0x80);
                 memory->write(address, data);
             }
-            stepCpu(5);
+            stepCpu(2);
             break;
 
         case 0x47: // Illegal *SRE Zero Page
@@ -1011,10 +1036,9 @@ void CPU::execOnce() {
             break;
 
         case 0x49: // EOR Immediate
-            accumulator ^= fetch();
+            accumulator ^= getAddress(AddressingMode::IMM);
             setZero(accumulator == 0);
             setNegative(accumulator & 0x80);
-            stepCpu(2);
             break;
 
         case 0x4A: // LSR Accumulator
@@ -1045,12 +1069,11 @@ void CPU::execOnce() {
             accumulator ^= memory->read(getAddress(AddressingMode::ABS));
             setZero(accumulator == 0);
             setNegative(accumulator & 0x80);
-            stepCpu(4);
             break;
 
         case 0x4E: // LSR Absolute
             {
-                uint16_t address = fetchWord();
+                uint16_t address = getAddress(AddressingMode::ABS);
                 uint8_t data = memory->read(address);
                 setCarry(data & 0x01);
                 data >>= 1;
@@ -1058,7 +1081,7 @@ void CPU::execOnce() {
                 setNegative(data & 0x80);
                 memory->write(address, data);
             }
-            stepCpu(6);
+            stepCpu(2);
             break;
 
         case 0x4F: // Illegal *SRE Absolute
@@ -1094,17 +1117,12 @@ void CPU::execOnce() {
 
         case 0x51: // EOR Indirect, Indexed
             {
-                uint8_t base = fetch();
-                uint16_t deref_base = (uint16_t(memory->read((base + 1) & 0xff)) << 8) | memory->read(base);
-                uint8_t data = memory->read(deref_base + yIndex);
+                uint16_t address = getAddress(AddressingMode::IZY);
+                uint8_t data = memory->read(address);
                 accumulator ^= data;
-                if ((deref_base & 0xFF00) != ((deref_base + yIndex) & 0xFF00)) {
-                    stepCpu(1);
-                }
                 setZero(accumulator == 0);
                 setNegative(accumulator & 0x80);
             }
-            stepCpu(5);
             break;
 
         case 0x52: // Illegal KIL
@@ -1135,7 +1153,6 @@ void CPU::execOnce() {
             accumulator ^= memory->read(getAddress(AddressingMode::ZPX));
             setZero(accumulator == 0);
             setNegative(accumulator & 0x80);
-            stepCpu(4);
             break;
 
         case 0x56: // LSR Zero Page, X
@@ -1148,7 +1165,7 @@ void CPU::execOnce() {
                 setNegative(data & 0x80);
                 memory->write(address, data);
             }
-            stepCpu(6);
+            stepCpu(2);
             break;
 
         case 0x57: // Illegal *SRE Zero Page, X
@@ -1173,15 +1190,11 @@ void CPU::execOnce() {
 
         case 0x59: // EOR Absolute, Y
             {
-                uint16_t base = fetchWord();
-                accumulator ^= memory->read(base + yIndex);
-                if ((base & 0xFF00) != ((base + yIndex) & 0xFF00)) {
-                    stepCpu(1);
-                }
+                uint16_t address = getAddress(AddressingMode::ABY);
+                accumulator ^= memory->read(address);
                 setZero(accumulator == 0);
                 setNegative(accumulator & 0x80);
             }
-            stepCpu(4);
             break;
 
         case 0x5A: // Illegal NOP
@@ -1208,15 +1221,11 @@ void CPU::execOnce() {
 
         case 0x5D: // EOR Absolute, X
             {
-                uint16_t base = fetchWord();
-                accumulator ^= memory->read(base + xIndex);
-                if ((base & 0xFF00) != ((base + xIndex) & 0xFF00)) {
-                    stepCpu(1);
-                }
+                uint16_t address = getAddress(AddressingMode::ABX);
+                accumulator ^= memory->read(address);
                 setZero(accumulator == 0);
                 setNegative(accumulator & 0x80);
             }
-            stepCpu(4);
             break;
 
         case 0x5E: // LSR Absolute, X
@@ -1254,11 +1263,7 @@ void CPU::execOnce() {
 
         case 0x61: // ADC Indexed Indirect
             {
-                uint8_t addr = fetch();
-                indirectAddr1 = (addr + xIndex) & 0xff;
-                uint16_t address = memory->read((addr + xIndex) & 0xff) + (uint16_t(memory->read((addr + xIndex + 1) & 0xff)) << 8);
-                indirectAddr2 = address;
-                miscValue = memory->read(address);
+                uint16_t address = getAddress(AddressingMode::IZX);
                 uint8_t data = memory->read(address);
                 uint16_t result = accumulator + data + getCarry();
                 setCarry(result > 0xFF);
@@ -1309,12 +1314,11 @@ void CPU::execOnce() {
                 setNegative(result & 0x80);
                 accumulator = result & 0xFF;
             }
-            stepCpu(3);
             break;
 
         case 0x66: // ROR Zero Page
             {
-                uint16_t address = fetch();
+                uint16_t address = getAddress(AddressingMode::ZP0);
                 uint8_t data = memory->read(address);
                 uint8_t carry = getCarry();
                 setCarry(data & 0x01);
@@ -1324,7 +1328,7 @@ void CPU::execOnce() {
                 setNegative(data & 0x80);
                 memory->write(address, data);
             }
-            stepCpu(5);
+            stepCpu(2);
             break;
 
         case 0x67: // Illegal *RRA Zero Page
@@ -1409,12 +1413,11 @@ void CPU::execOnce() {
                 setNegative(result & 0x80);
                 accumulator = result & 0xFF;
             }
-            stepCpu(4);
             break;
 
         case 0x6E: // ROR Absolute
             {
-                uint16_t address = fetchWord();
+                uint16_t address = getAddress(AddressingMode::ABS);
                 uint8_t data = memory->read(address);
                 uint8_t carry = getCarry();
                 setCarry(data & 0x01);
@@ -1424,7 +1427,7 @@ void CPU::execOnce() {
                 setNegative(data & 0x80);
                 memory->write(address, data);
             }
-            stepCpu(6);
+            stepCpu(2);
             break;
 
         case 0x6F: // Illegal *RRA Absolute
@@ -1465,12 +1468,8 @@ void CPU::execOnce() {
 
         case 0x71: // ADC Indirect, Indexed
             {
-                uint8_t base = fetch();
-                uint16_t deref_base = (uint16_t(memory->read((base + 1) & 0xff)) << 8) | memory->read(base);
-                uint8_t data = memory->read(deref_base + yIndex);
-                if ((deref_base & 0xFF00) != ((deref_base + yIndex) & 0xFF00)) {
-                    stepCpu(1);
-                }
+                uint16_t address = getAddress(AddressingMode::IZY);
+                uint8_t data = memory->read(address);
                 uint16_t result = accumulator + data + getCarry();
                 setCarry(result > 0xFF);
                 setZero((result & 0xFF) == 0);
@@ -1478,7 +1477,6 @@ void CPU::execOnce() {
                 setNegative(result & 0x80);
                 accumulator = result & 0xFF;
             }
-            stepCpu(5);
             break;
 
         case 0x72: // Illegal KIL
@@ -1520,7 +1518,6 @@ void CPU::execOnce() {
                 setNegative(result & 0x80);
                 accumulator = result & 0xFF;
             }
-            stepCpu(4);
             break;
 
         case 0x76: // ROR Zero Page, X
@@ -1535,7 +1532,7 @@ void CPU::execOnce() {
                 setNegative(data & 0x80);
                 memory->write(address, data);
             }
-            stepCpu(6);
+            stepCpu(2);
             break;
 
         case 0x77: // Illegal *RRA Zero Page, X
@@ -1565,11 +1562,7 @@ void CPU::execOnce() {
 
         case 0x79: // ADC Absolute, Y
             {
-                uint16_t base = fetchWord();
-                uint16_t address = base + yIndex;
-                if ((address & 0xFF00) != (base & 0xFF00)) {
-                    stepCpu(1);
-                }
+                uint16_t address = getAddress(AddressingMode::ABY);
                 uint8_t data = memory->read(address);
                 uint16_t result = accumulator + data + getCarry();
                 setCarry(result > 0xFF);
@@ -1610,11 +1603,7 @@ void CPU::execOnce() {
 
         case 0x7D: // ADC Absolute, X
             {
-                uint16_t base = fetchWord();
-                uint16_t address = base + xIndex;
-                if ((address & 0xFF00) != (base & 0xFF00)) {
-                    stepCpu(1);
-                }
+                uint16_t address = getAddress(AddressingMode::ABX);
                 uint8_t data = memory->read(address);
                 uint16_t result = accumulator + data + getCarry();
                 setCarry(result > 0xFF);
@@ -1623,7 +1612,6 @@ void CPU::execOnce() {
                 setNegative(result & 0x80);
                 accumulator = result & 0xFF;
             }
-            stepCpu(4);
             break;
 
         case 0x7E: // ROR Absolute, X
@@ -1666,15 +1654,7 @@ void CPU::execOnce() {
             break;
 
         case 0x81: // STA Indexed, Indirect
-            {
-                uint8_t addr = fetch();
-                indirectAddr1 = (addr + xIndex) & 0xff;
-                uint16_t address = memory->read((addr + xIndex) & 0xff) + (uint16_t(memory->read((addr + xIndex + 1) & 0xff)) << 8);
-                indirectAddr2 = address;
-                miscValue = memory->read(address);
-                memory->write(address, accumulator);
-            }
-            stepCpu(6);
+            memory->write(getAddress(AddressingMode::IZX), accumulator);
             break;
 
         case 0x82: // Illegal *NOP Immediate
@@ -1690,19 +1670,15 @@ void CPU::execOnce() {
             break;
 
         case 0x84: // STY Zero Page
-            miscValue = memory->read(fetchNoAdvance());
-            memory->write(fetch(), yIndex);
-            stepCpu(3);
+            memory->write(getAddress(AddressingMode::ZP0), yIndex);
             break;
 
         case 0x85: // STA Zero Page
-            memory->write(fetch(), accumulator);
-            stepCpu(3);
+            memory->write(getAddress(AddressingMode::ZP0), accumulator);
             break;
 
         case 0x86: // STX Zero Page
-            memory->write(fetch(), xIndex);
-            stepCpu(3);
+            memory->write(getAddress(AddressingMode::ZP0), xIndex);
             break;
 
         case 0x87: // Illegal *SAX Zero Page.
@@ -1740,21 +1716,15 @@ void CPU::execOnce() {
             break;
 
         case 0x8C: // STY Absolute
-            miscValue = memory->read(fetchWordNoAdvance());
-            memory->write(fetchWord(), yIndex);
-            stepCpu(4);
+            memory->write(getAddress(AddressingMode::ABS), yIndex);
             break;
 
         case 0x8D: // STA Absolute
-            miscValue = memory->read(fetchWordNoAdvance());
-            memory->write(fetchWord(), accumulator);
-            stepCpu(4);
+            memory->write(getAddress(AddressingMode::ABS), accumulator);
             break;
 
         case 0x8E: // STX Absolute
-            miscValue = memory->read(fetchWordNoAdvance());
-            memory->write(fetchWord(), xIndex);
-            stepCpu(4);
+            memory->write(getAddress(AddressingMode::ABS), xIndex);
             break;
 
         case 0x8F: // Illegal *SAX Absolute
@@ -1782,8 +1752,12 @@ void CPU::execOnce() {
 
         case 0x91: // STA Indirect, Indexed
             {
-                uint16_t address = getAddress(AddressingMode::IZY);
-                memory->write(address, accumulator);
+                uint8_t base = fetch();
+                uint8_t lo = memory->read(base);
+                uint8_t hi = memory->read((base + 1) & 0xFF);
+                uint16_t deref_base = ((uint16_t)lo) | ((uint16_t)hi << 8);
+                uint16_t deref = deref_base + yIndex;
+                memory->write(deref, accumulator);
             }
             stepCpu(6);
             break;
@@ -1803,18 +1777,14 @@ void CPU::execOnce() {
 
         case 0x94: // STY Zero Page, X
             memory->write(getAddress(AddressingMode::ZPX), yIndex);
-            stepCpu(4);
             break;
 
         case 0x95: // STA Zero Page, X
-            miscValue = memory->read(fetchNoAdvance() + xIndex);
             memory->write(getAddress(AddressingMode::ZPX), accumulator);
-            stepCpu(4);
             break;
 
         case 0x96: // STX Zero Page, Y
             memory->write(getAddress(AddressingMode::ZPY), xIndex);
-            stepCpu(4);
             break;
 
         case 0x97: // Illegal *SAX Zero Page, Y
@@ -1861,7 +1831,6 @@ void CPU::execOnce() {
             break;
 
         case 0x9D: // STA Absolute, X
-            miscValue = memory->read(fetchWordNoAdvance() + xIndex);
             memory->write(fetchWord() + xIndex, accumulator);
             stepCpu(5);
             break;
@@ -1883,25 +1852,19 @@ void CPU::execOnce() {
             break;
 
         case 0xA0: // LDY Immediate
-            yIndex = fetch();
+            yIndex = getAddress(AddressingMode::IMM);
             miscValue = yIndex;
             setZero(yIndex == 0);
             setNegative(yIndex & 0x80);
-            stepCpu(2);
             break;
 
         case 0xA1: // LDA Indexed, Indirect
             {   
-                uint8_t addr = fetch();
-                indirectAddr1 = (addr + xIndex) & 0xff;  
-                uint16_t thingIdk = memory->read((addr + xIndex) & 0xff) + (uint16_t(memory->read((addr + xIndex + 1) & 0xff)) << 8);
-                indirectAddr2 = thingIdk;
-                accumulator = memory->read(thingIdk);
-                miscValue = accumulator;
+                uint16_t address = getAddress(AddressingMode::IZX);
+                accumulator = memory->read(address);
                 setZero(accumulator == 0);
                 setNegative(accumulator & 0x80);
             }
-            stepCpu(6);
             break;
             
             // indirectAddr1 = fetchNoAdvance() + xIndex;
@@ -1916,11 +1879,10 @@ void CPU::execOnce() {
             // break;
 
         case 0xA2: // LDX Immediate
-            xIndex = fetch();
+            xIndex = getAddress(AddressingMode::IMM);
             miscValue = xIndex;
             setZero(xIndex == 0);
             setNegative(xIndex & 0x80);
-            stepCpu(2);
             break;
 
         case 0xA3: // Illegal LAX Indexed, Indirect
@@ -1940,14 +1902,12 @@ void CPU::execOnce() {
             miscValue = yIndex;
             setZero(yIndex == 0);
             setNegative(yIndex & 0x80);
-            stepCpu(3);
             break;
 
         case 0xA5: // LDA Zero Page
             accumulator = memory->read(getAddress(AddressingMode::ZP0));
             setZero(accumulator == 0);
             setNegative(accumulator & 0x80);
-            stepCpu(3);
             break;
 
         case 0xA6: // LDX Zero Page
@@ -1955,7 +1915,6 @@ void CPU::execOnce() {
             miscValue = xIndex;
             setZero(xIndex == 0);
             setNegative(xIndex & 0x80);
-            stepCpu(3);
             break;
 
         case 0xA7: // Illegal LAX Zero Page
@@ -1976,11 +1935,10 @@ void CPU::execOnce() {
             break;
 
         case 0xA9: // LDA Immediate
-            accumulator = fetch();
+            accumulator = getAddress(AddressingMode::IMM);
             miscValue = accumulator;
             setZero(accumulator == 0);
             setNegative(accumulator & 0x80);
-            stepCpu(2);
             break;
 
         case 0xAA: // TAX
@@ -2005,7 +1963,6 @@ void CPU::execOnce() {
             miscValue = yIndex;
             setZero(yIndex == 0);
             setNegative(yIndex & 0x80);
-            stepCpu(4);
             break;
         
         case 0xAD: // LDA Absolute
@@ -2013,7 +1970,6 @@ void CPU::execOnce() {
             miscValue = accumulator;
             setZero(accumulator == 0);
             setNegative(accumulator & 0x80);
-            stepCpu(4);
             break;
 
         case 0xAE: // LDX Absolute
@@ -2021,7 +1977,6 @@ void CPU::execOnce() {
             miscValue = xIndex;
             setZero(xIndex == 0);
             setNegative(xIndex & 0x80);
-            stepCpu(4);
             break;
 
         case 0xAF: // Illegal LAX Absolute
@@ -2052,18 +2007,11 @@ void CPU::execOnce() {
 
         case 0xB1: // LDA Indirect, Indexed
             {
-                uint8_t base = fetch();
-                uint16_t deref_base = (uint16_t(memory->read((base + 1) & 0xff)) << 8) | memory->read(base);
-                accumulator = memory->read(deref_base + yIndex);
-                miscValue = accumulator;
-                if ((deref_base & 0xFF00) != ((deref_base + yIndex) & 0xFF00)) {
-                    stepCpu(1);
-                }
-
+                uint16_t address = getAddress(AddressingMode::IZY);
+                accumulator = memory->read(address);
                 setZero(accumulator == 0);
                 setNegative(accumulator & 0x80);
             }
-            stepCpu(5);
             break;
 
         case 0xB2: // Illegal KIL
@@ -2087,7 +2035,6 @@ void CPU::execOnce() {
             miscValue = yIndex;
             setZero(yIndex == 0);
             setNegative(yIndex & 0x80);
-            stepCpu(4);
             break;
 
         case 0xB5: // LDA Zero Page, X
@@ -2095,7 +2042,6 @@ void CPU::execOnce() {
             miscValue = accumulator;
             setZero(accumulator == 0);
             setNegative(accumulator & 0x80);
-            stepCpu(4);
             break;
 
         case 0xB7: // Illegal LAX Zero Page, Y
@@ -2113,7 +2059,6 @@ void CPU::execOnce() {
             miscValue = xIndex;
             setZero(xIndex == 0);
             setNegative(xIndex & 0x80);
-            stepCpu(4);
             break;
 
         case 0xB8: // CLV
@@ -2123,16 +2068,11 @@ void CPU::execOnce() {
 
         case 0xB9: // LDA Absolute, Y
             {
-                uint16_t base = fetchWord();
-                accumulator = memory->read(base + yIndex);
-                miscValue = accumulator;
-                if ((base & 0xFF00) != ((base + yIndex) & 0xFF00)) {
-                    stepCpu(1);
-                }
+                uint16_t address = getAddress(AddressingMode::ABY);
+                accumulator = memory->read(address);
                 setZero(accumulator == 0);
                 setNegative(accumulator & 0x80);
             }
-            stepCpu(4);
             break;
 
         case 0xBA: // TSX
@@ -2155,12 +2095,7 @@ void CPU::execOnce() {
 
         case 0xBC: // LDY Absolute, X
             {
-                uint16_t base = fetchWord();
-                yIndex = memory->read(base + xIndex);
-                miscValue = yIndex;
-                if ((base & 0xFF00) != ((base + xIndex) & 0xFF00)) {
-                    stepCpu(1);
-                }
+                yIndex = memory->read(getAddress(AddressingMode::ABX));
                 setZero(yIndex == 0);
                 setNegative(yIndex & 0x80);
             }
@@ -2169,30 +2104,20 @@ void CPU::execOnce() {
 
         case 0xBD: // LDA Absolute, X
             {
-                uint16_t base = fetchWord();
-                accumulator = memory->read(base + xIndex);
-                miscValue = accumulator;
-                if ((base & 0xFF00) != ((base + xIndex) & 0xFF00)) {
-                    stepCpu(1);
-                }
+                uint16_t address = getAddress(AddressingMode::ABX);
+                accumulator = memory->read(address);
                 setZero(accumulator == 0);
                 setNegative(accumulator & 0x80);
             }
-            stepCpu(4);
             break;
 
         case 0xBE: // LDX Absolute, Y
             {
-                uint16_t base = fetchWord();
-                xIndex = memory->read(base + yIndex);
-                miscValue = xIndex;
-                if ((base & 0xFF00) != ((base + yIndex) & 0xFF00)) {
-                    stepCpu(1);
-                }
+                uint16_t address = getAddress(AddressingMode::ABY);
+                xIndex = memory->read(address);
                 setZero(xIndex == 0);
                 setNegative(xIndex & 0x80);
             }
-            stepCpu(4);
             break;
 
         case 0xBF: // Illegal LAX Absolute, Y
@@ -2207,29 +2132,23 @@ void CPU::execOnce() {
 
         case 0xC0: // CPY Immediate
             {
-                uint8_t data = fetch();
+                uint8_t data = getAddress(AddressingMode::IMM);
                 uint16_t result = yIndex - data;
                 setCarry(yIndex >= data);
                 setZero((result & 0xFF) == 0);
                 setNegative(result & 0x80);
             }
-            stepCpu(2);
             break;
 
         case 0xC1: // CMP Indexed, Indirect
             {
-                uint8_t addr = fetch();
-                indirectAddr1 = (addr + xIndex) & 0xff;
-                uint16_t address = memory->read((addr + xIndex) & 0xff) + (uint16_t(memory->read((addr + xIndex + 1) & 0xff)) << 8);
-                indirectAddr2 = address;
-                miscValue = memory->read(address);
+                uint16_t address = getAddress(AddressingMode::IZX);
                 uint8_t data = memory->read(address);
                 uint16_t result = accumulator - data;
                 setCarry(accumulator >= data);
                 setZero((result & 0xFF) == 0);
                 setNegative(result & 0x80);
             }
-            stepCpu(6);
             break;
 
         case 0xC2: // Illegal *NOP Immediate
@@ -2267,19 +2186,18 @@ void CPU::execOnce() {
                 setZero((result & 0xFF) == 0);
                 setNegative(result & 0x80);
             }
-            stepCpu(3);
             break;
 
         case 0xC6: // DEC Zero Page
             {
-                uint16_t address = fetch();
+                uint16_t address = getAddress(AddressingMode::ZP0);
                 uint8_t data = memory->read(address);
                 data--;
                 setZero(data == 0);
                 setNegative(data & 0x80);
                 memory->write(address, data);
             }
-            stepCpu(5);
+            stepCpu(2);
             break;
 
         case 0xC7: // Illegal *DCP Zero Page
@@ -2309,7 +2227,6 @@ void CPU::execOnce() {
                 setZero((result & 0xFF) == 0);
                 setNegative(result & 0x80);
             }
-            stepCpu(2);
             break;
 
         case 0xCA: // DEX
@@ -2354,14 +2271,14 @@ void CPU::execOnce() {
 
         case 0xCE: // DEC Absolute
             {
-                uint16_t address = fetchWord();
+                uint16_t address = getAddress(AddressingMode::ABS);
                 uint8_t data = memory->read(address);
                 data--;
                 setZero(data == 0);
                 setNegative(data & 0x80);
                 memory->write(address, data);
             }
-            stepCpu(6);
+            stepCpu(2);
             break;
 
         case 0xCF: // Illegal *DCP Absolute
@@ -2394,18 +2311,13 @@ void CPU::execOnce() {
 
         case 0xD1: // CMP Indirect, Indexed
             {
-                uint8_t base = fetch();
-                uint16_t deref_base = (uint16_t(memory->read((base + 1) & 0xff)) << 8) | memory->read(base);
-                uint8_t data = memory->read(deref_base + yIndex);
-                if ((deref_base & 0xFF00) != ((deref_base + yIndex) & 0xFF00)) {
-                    stepCpu(1);
-                }
+                uint16_t address = getAddress(AddressingMode::IZY);
+                uint8_t data = memory->read(address);
                 uint16_t result = accumulator - data;
                 setCarry(accumulator >= data);
                 setZero((result & 0xFF) == 0);
                 setNegative(result & 0x80);
             }
-            stepCpu(5);
             break;
 
         case 0xD2: // Illegal KIL
@@ -2436,7 +2348,6 @@ void CPU::execOnce() {
                 setZero((result & 0xFF) == 0);
                 setNegative(result & 0x80);
             }
-            stepCpu(4);
             break;
 
         case 0xD6: // DEC Zero Page, X
@@ -2448,7 +2359,7 @@ void CPU::execOnce() {
                 setNegative(data & 0x80);
                 memory->write(address, data);
             }
-            stepCpu(6);
+            stepCpu(2);
             break;
 
         case 0xD7: // Illegal *DCP Zero Page, X
@@ -2470,17 +2381,13 @@ void CPU::execOnce() {
 
         case 0xD9: // CMP Absolute, Y
             {
-                uint16_t base = fetchWord();
-                uint8_t data = memory->read(base + yIndex);
-                if ((base & 0xFF00) != ((base + yIndex) & 0xFF00)) {
-                    stepCpu(1);
-                }
+                uint16_t address = getAddress(AddressingMode::ABY);
+                uint8_t data = memory->read(address);
                 uint16_t result = accumulator - data;
                 setCarry(accumulator >= data);
                 setZero((result & 0xFF) == 0);
                 setNegative(result & 0x80);
             }
-            stepCpu(4);
             break;
 
         case 0xDA: // Illegal NOP
@@ -2504,22 +2411,18 @@ void CPU::execOnce() {
 
         case 0xDD: // CMP Absolute, X
             {
-                uint16_t base = fetchWord();
-                uint8_t data = memory->read(base + xIndex);
-                if ((base & 0xFF00) != ((base + xIndex) & 0xFF00)) {
-                    stepCpu(1);
-                }
+                uint16_t address = getAddress(AddressingMode::ABX);
+                uint8_t data = memory->read(address);
                 uint16_t result = accumulator - data;
                 setCarry(accumulator >= data);
                 setZero((result & 0xFF) == 0);
                 setNegative(result & 0x80);
             }
-            stepCpu(4);
             break;
 
         case 0xDE: // DEC Absolute, X
             {
-                uint16_t address = getAddress(AddressingMode::ABX);
+                uint16_t address = fetchWord() + xIndex;
                 uint8_t data = memory->read(address);
                 data--;
                 setZero(data == 0);
@@ -2543,22 +2446,17 @@ void CPU::execOnce() {
 
         case 0xE0: // CPX Immediate
             {
-                uint8_t data = fetch();
+                uint8_t data = getAddress(AddressingMode::IMM);
                 uint16_t result = xIndex - data;
                 setCarry(xIndex >= data);
                 setZero((result & 0xFF) == 0);
                 setNegative(result & 0x80);
             }
-            stepCpu(2);
             break;
 
         case 0xE1: // SBC Indexed, Indirect
             {
-                uint8_t addr = fetch();
-                indirectAddr1 = (addr + xIndex) & 0xff;
-                uint16_t address = memory->read((addr + xIndex) & 0xff) + (uint16_t(memory->read((addr + xIndex + 1) & 0xff)) << 8);
-                indirectAddr2 = address;
-                miscValue = memory->read(address);
+                uint16_t address = getAddress(AddressingMode::IZX);
                 uint8_t data = memory->read(address);
                 uint16_t result = accumulator - data - (1 - getCarry());
                 setCarry(result < 0x100);
@@ -2567,7 +2465,6 @@ void CPU::execOnce() {
                 setNegative(result & 0x80);
                 accumulator = result & 0xFF;
             }
-            stepCpu(6);
             break;
 
         case 0xE2: // Illegal *NOP Immediate
@@ -2598,7 +2495,6 @@ void CPU::execOnce() {
                 setZero((result & 0xFF) == 0);
                 setNegative(result & 0x80);
             }
-            stepCpu(3);
             break;
 
         case 0xE5: // SBC Zero Page
@@ -2611,19 +2507,18 @@ void CPU::execOnce() {
                 setNegative(result & 0x80);
                 accumulator = result & 0xFF;
             }
-            stepCpu(3);
             break;
 
         case 0xE6: // INC Zero Page
             {
-                uint16_t address = fetch();
+                uint16_t address = getAddress(AddressingMode::ZP0);
                 uint8_t data = memory->read(address);
                 data++;
                 setZero(data == 0);
                 setNegative(data & 0x80);
                 memory->write(address, data);
             }
-            stepCpu(5);
+            stepCpu(2);
             break;
 
         case 0xE7: // Illegal *ISB Zero Page
@@ -2650,7 +2545,7 @@ void CPU::execOnce() {
 
         case 0xE9: // SBC Immediate
             {
-                uint8_t data = fetch();
+                uint8_t data = getAddress(AddressingMode::IMM);
                 uint16_t result = accumulator - data - (1 - getCarry());
                 setCarry(result < 0x100);
                 setZero((result & 0xFF) == 0);
@@ -2658,7 +2553,6 @@ void CPU::execOnce() {
                 setNegative(result & 0x80);
                 accumulator = result & 0xFF;
             }
-            stepCpu(2);
             break;
 
         case 0xEA: // NOP
@@ -2685,7 +2579,6 @@ void CPU::execOnce() {
                 setZero((result & 0xFF) == 0);
                 setNegative(result & 0x80);
             }
-            stepCpu(4);
             break;
 
         case 0xED: // SBC Absolute
@@ -2698,19 +2591,18 @@ void CPU::execOnce() {
                 setNegative(result & 0x80);
                 accumulator = result & 0xFF;
             }
-            stepCpu(4);
             break;
 
         case 0xEE: // INC Absolute
             {
-                uint16_t address = fetchWord();
+                uint16_t address = getAddress(AddressingMode::ABS);
                 uint8_t data = memory->read(address);
                 data++;
                 setZero(data == 0);
                 setNegative(data & 0x80);
                 memory->write(address, data);
             }
-            stepCpu(6);
+            stepCpu(2);
             break;
 
         case 0xEF: // Illegal *ISB Absolute
@@ -2746,12 +2638,7 @@ void CPU::execOnce() {
 
         case 0xF1: // SBC Indirect, Indexed
             {
-                uint8_t base = fetch();
-                uint16_t deref_base = (uint16_t(memory->read((base + 1) & 0xff)) << 8) | memory->read(base);
-                uint8_t data = memory->read(deref_base + yIndex);
-                if ((deref_base & 0xFF00) != ((deref_base + yIndex) & 0xFF00)) {
-                    stepCpu(1);
-                }
+                uint8_t data = memory->read(getAddress(AddressingMode::IZY));
                 uint16_t result = accumulator - data - (1 - getCarry());
                 setCarry(result < 0x100);
                 setZero((result & 0xFF) == 0);
@@ -2759,7 +2646,6 @@ void CPU::execOnce() {
                 setNegative(result & 0x80);
                 accumulator = result & 0xFF;
             }
-            stepCpu(5);
             break;
 
         case 0xF2: // Illegal KIL
@@ -2796,7 +2682,6 @@ void CPU::execOnce() {
                 setNegative(result & 0x80);
                 accumulator = result & 0xFF;
             }
-            stepCpu(4);
             break;
 
         case 0xF6: // INC Zero Page, X
@@ -2808,7 +2693,7 @@ void CPU::execOnce() {
                 setNegative(data & 0x80);
                 memory->write(address, data);
             }
-            stepCpu(6);
+            stepCpu(2);
             break;
 
         case 0xF7: // Illegal *ISB Zero Page, X
@@ -2833,11 +2718,7 @@ void CPU::execOnce() {
 
         case 0xF9: // SBC Absolute, Y
             {
-                uint16_t base = fetchWord();
-                uint8_t data = memory->read(base + yIndex);
-                if ((base & 0xFF00) != ((base + yIndex) & 0xFF00)) {
-                    stepCpu(1);
-                }
+                uint8_t data = memory->read(getAddress(AddressingMode::ABY));
                 uint16_t result = accumulator - data - (1 - getCarry());
                 setCarry(result < 0x100);
                 setZero((result & 0xFF) == 0);
@@ -2845,7 +2726,6 @@ void CPU::execOnce() {
                 setNegative(result & 0x80);
                 accumulator = result & 0xFF;
             }
-            stepCpu(4);
             break;
 
         case 0xFA: // Illegal NOP
@@ -2872,11 +2752,7 @@ void CPU::execOnce() {
             
         case 0xFD: // SBC Absolute, X
             {
-                uint16_t base = fetchWord();
-                uint8_t data = memory->read(base + xIndex);
-                if ((base & 0xFF00) != ((base + xIndex) & 0xFF00)) {
-                    stepCpu(1);
-                }
+                uint8_t data = memory->read(getAddress(AddressingMode::ABX));
                 uint16_t result = accumulator - data - (1 - getCarry());
                 setCarry(result < 0x100);
                 setZero((result & 0xFF) == 0);
@@ -2884,7 +2760,6 @@ void CPU::execOnce() {
                 setNegative(result & 0x80);
                 accumulator = result & 0xFF;
             }
-            stepCpu(4);
             break;
 
         case 0xFE: // INC Absolute, X
@@ -2919,74 +2794,4 @@ void CPU::execOnce() {
             System::instance->stop = true;
             break;
     }
-    // std::string logOut = log();
-    // std::string goodLog;
-    // std::getline(knownGoodLog, goodLog);
-    // size_t ppuPos = goodLog.find(" PPU:");
-    // if (ppuPos != std::string::npos) {
-    //     // remove the rest of the line
-    //     goodLog.erase(ppuPos + 1);
-    // }
-    // goodLog.pop_back();
-    // // check if the good log and log contain AND
-    // bool containsAnd = goodLog.find("AND") != std::string::npos;
-    // containsAnd = containsAnd && logOut.find("AND") != std::string::npos;
-
-    // std::string goodLog2 = goodLog;
-    // // replace everything past = until A: with a space 
-    // size_t equalsPos = goodLog2.find("=");
-    // if (equalsPos != std::string::npos) {
-    //     equalsPos -=2;
-    // }
-    // size_t aPos = goodLog2.find("A:");
-    // if (equalsPos != std::string::npos && aPos != std::string::npos) {
-    //     // Calculate the number of spaces to insert
-    //     size_t numSpaces = aPos - equalsPos - 1;
-    //     std::string spaces(numSpaces, ' ');
-    //     goodLog2.replace(equalsPos + 1, numSpaces, spaces);
-    // }
-    // std::string logOut2 = logOut;
-    // // replace everything past = until A: with a space
-    // size_t aPos2 = logOut2.find("A:");
-    // if (equalsPos != std::string::npos && aPos != std::string::npos) {
-    //     // Calculate the number of spaces to insert
-    //     size_t numSpaces = aPos - equalsPos - 1;
-    //     std::string spaces(numSpaces, ' ');
-    //     logOut2.replace(equalsPos + 1, numSpaces, spaces);
-    // }
-
-    // // also replace from @ to A: with a space
-    // size_t atPos = goodLog2.find("@");
-    // if (atPos != std::string::npos) {
-    //     atPos -= 2;
-    // }
-    // if (atPos != std::string::npos && aPos != std::string::npos) {
-    //     // Calculate the number of spaces to insert
-    //     size_t numSpaces = aPos - atPos - 1;
-    //     std::string spaces(numSpaces, ' ');
-    //     goodLog2.replace(atPos + 1, numSpaces, spaces);
-    // }
-    // size_t atPos2 = logOut2.find("@");
-    // if (atPos2 != std::string::npos) {
-    //     atPos2 -= 2;
-    // }
-    // if (atPos != std::string::npos && aPos != std::string::npos) {
-    //     // Calculate the number of spaces to insert
-    //     size_t numSpaces = aPos - atPos - 1;
-    //     std::string spaces(numSpaces, ' ');
-    //     logOut2.replace(atPos + 1, numSpaces, spaces);
-    // }
-
-    // if (logOut != goodLog && logOut != goodLog2 && logOut2 != goodLog2  || stepCountAfterFatalError > 0) {
-    //     std::cout << "\x1b[31m" << logOut << "\x1b[0m" << std::endl;
-    //     std::cout << "\x1b[33m" << goodLog << "\x1b[0m" << std::endl;
-    //     if (!containsAnd) {
-    //         stepCountAfterFatalError++;
-    //     }
-    //     if (stepCountAfterFatalError > 10) {
-    //         exit(1);
-    //     }
-    // } else {
-    //     std::cout << "\x1b[32m" << logOut << "\x1b[0m" << std::endl;
-    // }
 }
