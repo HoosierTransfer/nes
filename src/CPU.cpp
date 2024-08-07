@@ -277,7 +277,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x03:
-            opcodeName = "SLO";
+            opcodeName = "*SLO";
             mode = AddressingMode::IZX;
             break;
 
@@ -297,7 +297,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x07:
-            opcodeName = "SLO";
+            opcodeName = "*SLO";
             mode = AddressingMode::ZP0;
             break;
 
@@ -337,7 +337,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x0F:
-            opcodeName = "SLO";
+            opcodeName = "*SLO";
             mode = AddressingMode::ABS;
             break;
 
@@ -357,7 +357,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x13:
-            opcodeName = "SLO";
+            opcodeName = "*SLO";
             mode = AddressingMode::IZY;
             break;
 
@@ -377,7 +377,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x17:
-            opcodeName = "SLO";
+            opcodeName = "*SLO";
             mode = AddressingMode::ZPX;
             break;
 
@@ -397,7 +397,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x1B:
-            opcodeName = "SLO";
+            opcodeName = "*SLO";
             mode = AddressingMode::ABY;
             break;
 
@@ -417,7 +417,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x1F:
-            opcodeName = "SLO";
+            opcodeName = "*SLO";
             mode = AddressingMode::ABX;
             break;
 
@@ -437,7 +437,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x23:
-            opcodeName = "RLA";
+            opcodeName = "*RLA";
             mode = AddressingMode::IZX;
             break;
 
@@ -457,7 +457,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x27:
-            opcodeName = "RLA";
+            opcodeName = "*RLA";
             mode = AddressingMode::ZP0;
             break;
 
@@ -497,7 +497,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x2F:
-            opcodeName = "RLA";
+            opcodeName = "*RLA";
             mode = AddressingMode::ABS;
             break;
 
@@ -517,7 +517,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x33:
-            opcodeName = "RLA";
+            opcodeName = "*RLA";
             mode = AddressingMode::IZY;
             break;
 
@@ -537,7 +537,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x37:
-            opcodeName = "RLA";
+            opcodeName = "*RLA";
             mode = AddressingMode::ZPX;
             break;
 
@@ -557,7 +557,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x3B:
-            opcodeName = "RLA";
+            opcodeName = "*RLA";
             mode = AddressingMode::ABY;
             break;
 
@@ -577,7 +577,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x3F:
-            opcodeName = "RLA";
+            opcodeName = "*RLA";
             mode = AddressingMode::ABX;
             break;
 
@@ -597,7 +597,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x43:
-            opcodeName = "SRE";
+            opcodeName = "*SRE";
             mode = AddressingMode::IZX;
             break;
 
@@ -617,7 +617,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x47:
-            opcodeName = "SRE";
+            opcodeName = "*SRE";
             mode = AddressingMode::ZP0;
             break;
 
@@ -657,7 +657,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x4F:
-            opcodeName = "SRE";
+            opcodeName = "*SRE";
             mode = AddressingMode::ABS;
             break;
 
@@ -677,7 +677,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x53:
-            opcodeName = "SRE";
+            opcodeName = "*SRE";
             mode = AddressingMode::IZY;
             break;
         
@@ -697,7 +697,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x57:
-            opcodeName = "SRE";
+            opcodeName = "*SRE";
             mode = AddressingMode::ZPX;
             break;
 
@@ -717,7 +717,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x5B:
-            opcodeName = "SRE";
+            opcodeName = "*SRE";
             mode = AddressingMode::ABY;
             break;
 
@@ -737,7 +737,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x5F:
-            opcodeName = "SRE";
+            opcodeName = "*SRE";
             mode = AddressingMode::ABX;
             break;
 
@@ -757,7 +757,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x63:
-            opcodeName = "RRA";
+            opcodeName = "*RRA";
             mode = AddressingMode::IZX;
             break;
 
@@ -777,7 +777,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x67:
-            opcodeName = "RRA";
+            opcodeName = "*RRA";
             mode = AddressingMode::ZP0;
             break;
 
@@ -817,7 +817,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x6F:
-            opcodeName = "RRA";
+            opcodeName = "*RRA";
             mode = AddressingMode::ABS;
             break;
 
@@ -837,7 +837,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x73:
-            opcodeName = "RRA";
+            opcodeName = "*RRA";
             mode = AddressingMode::IZY;
             break;
 
@@ -857,7 +857,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x77:
-            opcodeName = "RRA";
+            opcodeName = "*RRA";
             mode = AddressingMode::ZPX;
             break;
 
@@ -877,7 +877,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x7B:
-            opcodeName = "RRA";
+            opcodeName = "*RRA";
             mode = AddressingMode::ABY;
             break;
 
@@ -897,7 +897,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0x7F:
-            opcodeName = "RRA";
+            opcodeName = "*RRA";
             mode = AddressingMode::ABX;
             break;
 
@@ -1397,7 +1397,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0xE3:
-            opcodeName = "ISB";
+            opcodeName = "*ISB";
             mode = AddressingMode::IZX;
             break;
 
@@ -1417,7 +1417,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0xE7:
-            opcodeName = "ISB";
+            opcodeName = "*ISB";
             mode = AddressingMode::ZP0;
             break;
 
@@ -1457,7 +1457,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0xEF:
-            opcodeName = "ISB";
+            opcodeName = "*ISB";
             mode = AddressingMode::ABS;
             break;
 
@@ -1477,7 +1477,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0xF3:
-            opcodeName = "ISB";
+            opcodeName = "*ISB";
             mode = AddressingMode::IZY;
             break;
 
@@ -1497,7 +1497,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0xF7:
-            opcodeName = "ISB";
+            opcodeName = "*ISB";
             mode = AddressingMode::ZPX;
             break;
 
@@ -1517,7 +1517,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0xFB:
-            opcodeName = "ISB";
+            opcodeName = "*ISB";
             mode = AddressingMode::ABY;
             break;
 
@@ -1537,7 +1537,7 @@ std::string CPU::getInstruction() {
             break;
 
         case 0xFF:
-            opcodeName = "ISB";
+            opcodeName = "*ISB";
             mode = AddressingMode::ABX;
             break;
     }
@@ -1555,6 +1555,8 @@ std::string CPU::getInstruction() {
         ss << " = " << std::setw(2) << (int)miscValue;
     } else if ((opcodeName == "LDX" || opcodeName == "LDY" || opcodeName == "LDA" || opcodeName == "STA" || opcodeName == "STX" || opcodeName == "STY" || opcodeName == "ORA" || opcodeName == "EOR" || opcodeName == "ADC" || opcodeName == "CMP" || opcodeName == "SBC") && mode == AddressingMode::IZX) {
         ss << " @ " << std::setw(2) << (int)indirectAddr1 << " = " << std::setw(4) << (int)indirectAddr2 << " = " << std::setw(2) << (int)miscValue;
+    } else if ((opcodeName == "*DCP") && mode == AddressingMode::IZY) {
+        ss << " = " << std::setw(2) << (int)indirectAddr1 << " @ " << std::setw(4) << (int)indirectAddr2 << " = " << std::setw(2) << (int)miscValue;
     }
 
     return ss.str();
@@ -1594,9 +1596,16 @@ uint16_t CPU::getAddress(AddressingMode mode) {
             }
         case AddressingMode::IZY:
             {
-                uint8_t addr = fetch();
-                uint16_t address = memory->read((addr + xIndex) & 0xFF) + (uint16_t(memory->read((addr + xIndex + 1) & 0xFF)) << 8);
-                return address + yIndex;
+                uint8_t base = fetch();
+                uint8_t lo = memory->read(base);
+                uint8_t hi = memory->read((base + 1) & 0xFF);
+
+                uint16_t deref_base = ((uint16_t)lo) | ((uint16_t)hi << 8);
+                indirectAddr1 = deref_base;
+                uint16_t deref = deref_base + yIndex;
+                indirectAddr2 = deref;
+                miscValue = memory->read(deref);
+                return deref;
             }
     }
     return 0;
@@ -1643,7 +1652,7 @@ void CPU::execOnce() {
             System::instance->stop = true;
             break;
 
-        case 0x03: // Illegal SLO Indexed, Indirect
+        case 0x03: // Illegal *SLO Indexed, Indirect
             {
                 uint8_t addr = fetch();
                 uint16_t address = memory->read((addr + xIndex) & 0xff) + (uint16_t(memory->read((addr + xIndex + 1) & 0xff)) << 8);
@@ -1683,7 +1692,7 @@ void CPU::execOnce() {
             stepCpu(5);
             break;
 
-        case 0x07: // Illegal SLO Zero Page
+        case 0x07: // Illegal *SLO Zero Page
             {
                 uint16_t address = fetch();
                 uint8_t data = memory->read(address);
@@ -1750,7 +1759,7 @@ void CPU::execOnce() {
             stepCpu(6);
             break;
 
-        case 0x0F: // Illegal SLO Absolute
+        case 0x0F: // Illegal *SLO Absolute
             {
                 uint16_t address = fetchWord();
                 uint8_t data = memory->read(address);
@@ -1800,10 +1809,9 @@ void CPU::execOnce() {
             System::instance->stop = true;
             break;
             
-        case 0x13: // Illegal SLO Indexed, Indirect
+        case 0x13: // Illegal *SLO (Indirect), Y
             {
-                uint8_t addr = fetch();
-                uint16_t address = memory->read((addr + xIndex) & 0xff) + (uint16_t(memory->read((addr + xIndex + 1) & 0xff)) << 8);
+                uint16_t address = getAddress(AddressingMode::IZY);
                 uint8_t data = memory->read(address);
                 setCarry(data & 0x80);
                 data <<= 1;
@@ -1814,6 +1822,7 @@ void CPU::execOnce() {
                 setZero(accumulator == 0);
                 setNegative(accumulator & 0x80);
             }
+            break;
 
         case 0x14: // Illegal *NOP Zero Page, X
             fetch();
@@ -1839,7 +1848,7 @@ void CPU::execOnce() {
             stepCpu(6);
             break;
 
-        case 0x17: // Illegal SLO Zero Page, X
+        case 0x17: // Illegal *SLO Zero Page, X
             {
                 uint16_t address = getAddress(AddressingMode::ZPX);
                 uint8_t data = memory->read(address);
@@ -1868,7 +1877,7 @@ void CPU::execOnce() {
         case 0x1A: // Illegal NOP
             break;
 
-        case 0x1B: // Illegal SLO Absolute, Y
+        case 0x1B: // Illegal *SLO Absolute, Y
             {
                 uint16_t address = getAddress(AddressingMode::ABY);
                 uint8_t data = memory->read(address);
@@ -1913,7 +1922,7 @@ void CPU::execOnce() {
             stepCpu(7);
             break;
 
-        case 0x1F: // Illegal SLO Absolute, X
+        case 0x1F: // Illegal *SLO Absolute, X
             {
                 uint16_t address = fetchWord() + xIndex;
                 uint8_t data = memory->read(address);
@@ -1949,18 +1958,17 @@ void CPU::execOnce() {
             System::instance->stop = true;
             break;
 
-        case 0x23: // Illegal RLA Indirect, Indexed
+        case 0x23: // Illegal *RLA (Indirect,X)
             {
-                uint8_t base = fetch();
-                uint16_t deref_base = (uint16_t(memory->read((base + 1) & 0xff)) << 8) | memory->read(base);
-                uint8_t data = memory->read(deref_base + yIndex);
+                uint16_t address = getAddress(AddressingMode::IZX);
+                uint8_t data = memory->read(address);
                 uint8_t carry = getCarry();
                 setCarry(data & 0x80);
                 data <<= 1;
                 data |= carry;
                 setZero(data == 0);
                 setNegative(data & 0x80);
-                memory->write(deref_base + yIndex, data);
+                memory->write(address, data);
                 accumulator &= data;
                 setZero(accumulator == 0);
                 setNegative(accumulator & 0x80);
@@ -2000,7 +2008,7 @@ void CPU::execOnce() {
             stepCpu(5);
             break;
 
-        case 0x27: // Illegal RLA Zero Page
+        case 0x27: // Illegal *RLA Zero Page
             {
                 uint16_t address = fetch();
                 uint8_t data = memory->read(address);
@@ -2074,7 +2082,7 @@ void CPU::execOnce() {
             stepCpu(6);
             break;
 
-        case 0x2F: // Illegal RLA Absolute
+        case 0x2F: // Illegal *RLA Absolute
             {
                 uint16_t address = fetchWord();
                 uint8_t data = memory->read(address);
@@ -2126,10 +2134,9 @@ void CPU::execOnce() {
             System::instance->stop = true;
             break;
 
-        case 0x33: // Illegal RLA Indexed, Indirect
+        case 0x33: // Illegal *RLA (Indirect),Y
             {
-                uint8_t addr = fetch();
-                uint16_t address = memory->read((addr + xIndex) & 0xff) + (uint16_t(memory->read((addr + xIndex + 1) & 0xff)) << 8);
+                uint16_t address = getAddress(AddressingMode::IZY);
                 uint8_t data = memory->read(address);
                 uint8_t carry = getCarry();
                 setCarry(data & 0x80);
@@ -2170,7 +2177,7 @@ void CPU::execOnce() {
             stepCpu(6);
             break;
 
-        case 0x37: // Illegal RLA Zero Page, X
+        case 0x37: // Illegal *RLA Zero Page, X
             {
                 uint16_t address = getAddress(AddressingMode::ZPX);
                 uint8_t data = memory->read(address);
@@ -2208,7 +2215,7 @@ void CPU::execOnce() {
         case 0x3A: // Illegal NOP
             break;
 
-        case 0x3B: // Illegal RLA Absolute, Y
+        case 0x3B: // Illegal *RLA Absolute, Y
             {
                 uint16_t address = getAddress(AddressingMode::ABY);
                 uint8_t data = memory->read(address);
@@ -2257,7 +2264,7 @@ void CPU::execOnce() {
             stepCpu(7);
             break;
 
-        case 0x3F: // Illegal RLA Absolute, X
+        case 0x3F: // Illegal *RLA Absolute, X
             {
                 uint16_t address = fetchWord() + xIndex;
                 uint8_t data = memory->read(address);
@@ -2298,7 +2305,7 @@ void CPU::execOnce() {
             System::instance->stop = true;
             break;
 
-        case 0x43: // Illegal SRE Indexed, Indirect
+        case 0x43: // Illegal *SRE Indexed, Indirect
             {
                 uint8_t addr = fetch();
                 uint16_t address = memory->read((addr + xIndex) & 0xff) + (uint16_t(memory->read((addr + xIndex + 1) & 0xff)) << 8);
@@ -2338,7 +2345,7 @@ void CPU::execOnce() {
             stepCpu(5);
             break;
 
-        case 0x47: // Illegal SRE Zero Page
+        case 0x47: // Illegal *SRE Zero Page
             {
                 uint16_t address = fetch();
                 uint8_t data = memory->read(address);
@@ -2409,7 +2416,7 @@ void CPU::execOnce() {
             stepCpu(6);
             break;
 
-        case 0x4F: // Illegal SRE Absolute
+        case 0x4F: // Illegal *SRE Absolute
             {
                 uint16_t address = fetchWord();
                 uint8_t data = memory->read(address);
@@ -2459,7 +2466,7 @@ void CPU::execOnce() {
             System::instance->stop = true;
             break;
 
-        case 0x53: // Illegal SRE Indirect, Indexed
+        case 0x53: // Illegal *SRE Indirect, Indexed
             {
                 uint8_t base = fetch();
                 uint16_t deref_base = (uint16_t(memory->read((base + 1) & 0xff)) << 8) | memory->read(base);
@@ -2499,7 +2506,7 @@ void CPU::execOnce() {
             stepCpu(6);
             break;
 
-        case 0x57: // Illegal SRE Zero Page, X
+        case 0x57: // Illegal *SRE Zero Page, X
             {
                 uint16_t address = getAddress(AddressingMode::ZPX);
                 uint8_t data = memory->read(address);
@@ -2535,7 +2542,7 @@ void CPU::execOnce() {
         case 0x5A: // Illegal NOP
             break;
 
-        case 0x5B: // Illegal SRE Absolute, Y
+        case 0x5B: // Illegal *SRE Absolute, Y
             {
                 uint16_t address = getAddress(AddressingMode::ABY);
                 uint8_t data = memory->read(address);
@@ -2580,7 +2587,7 @@ void CPU::execOnce() {
             stepCpu(7);
             break;
 
-        case 0x5F: // Illegal SRE Absolute, X
+        case 0x5F: // Illegal *SRE Absolute, X
             {
                 uint16_t address = fetchWord() + xIndex;
                 uint8_t data = memory->read(address);
@@ -2622,7 +2629,7 @@ void CPU::execOnce() {
             System::instance->stop = true;
             break;
 
-        case 0x63: // Illegal RRA Indexed, Indirect
+        case 0x63: // Illegal *RRA Indexed, Indirect
             {
                 uint8_t addr = fetch();
                 uint16_t address = memory->read((addr + xIndex) & 0xff) + (uint16_t(memory->read((addr + xIndex + 1) & 0xff)) << 8);
@@ -2675,7 +2682,7 @@ void CPU::execOnce() {
             stepCpu(5);
             break;
 
-        case 0x67: // Illegal RRA Zero Page
+        case 0x67: // Illegal *RRA Zero Page
             {
                 uint16_t address = fetch();
                 uint8_t data = memory->read(address);
@@ -2776,7 +2783,7 @@ void CPU::execOnce() {
             stepCpu(6);
             break;
 
-        case 0x6F: // Illegal RRA Absolute
+        case 0x6F: // Illegal *RRA Absolute
             {
                 uint16_t address = fetchWord();
                 uint8_t data = memory->read(address);
@@ -2834,7 +2841,7 @@ void CPU::execOnce() {
             System::instance->stop = true;
             break;
 
-        case 0x73: // Illegal RRA Indirect, Indexed
+        case 0x73: // Illegal *RRA Indirect, Indexed
             {
                 uint8_t base = fetch();
                 uint16_t deref_base = (uint16_t(memory->read((base + 1) & 0xff)) << 8) | memory->read(base);
@@ -2887,7 +2894,7 @@ void CPU::execOnce() {
             stepCpu(6);
             break;
 
-        case 0x77: // Illegal RRA Zero Page, X
+        case 0x77: // Illegal *RRA Zero Page, X
             {
                 uint16_t address = getAddress(AddressingMode::ZPX);
                 uint8_t data = memory->read(address);
@@ -2933,7 +2940,7 @@ void CPU::execOnce() {
         case 0x7A: // Illegal NOP
             break;
 
-        case 0x7B: // Illegal RRA Absolute, Y
+        case 0x7B: // Illegal *RRA Absolute, Y
             {
                 uint16_t address = getAddress(AddressingMode::ABY);
                 uint8_t data = memory->read(address);
@@ -2990,7 +2997,7 @@ void CPU::execOnce() {
             stepCpu(7);
             break;
 
-        case 0x7F: // Illegal RRA Absolute, X
+        case 0x7F: // Illegal *RRA Absolute, X
             {
                 uint16_t address = fetchWord() + xIndex;
                 uint8_t data = memory->read(address);
@@ -3131,9 +3138,8 @@ void CPU::execOnce() {
 
         case 0x91: // STA Indirect, Indexed
             {
-                uint8_t base = fetch();
-                uint16_t deref_base = (uint16_t(memory->read((base + 1) & 0xff)) << 8) | memory->read(base);
-                memory->write(deref_base + yIndex, accumulator);
+                uint16_t address = getAddress(AddressingMode::IZY);
+                memory->write(address, accumulator);
             }
             stepCpu(6);
             break;
@@ -3765,8 +3771,8 @@ void CPU::execOnce() {
         case 0xD3: // Illegal *DCP Indirect, Indexed
             {
                 uint16_t address = getAddress(AddressingMode::IZY);
-                std::cout << "Address: " << std::hex << address << std::endl;
                 uint8_t data = memory->read(address);
+                std::cout << (uint16_t) memory->read(0x45) << std::endl;
                 data--;
                 memory->write(address, data);
                 setCarry(accumulator >= data);
@@ -3870,7 +3876,7 @@ void CPU::execOnce() {
 
         case 0xDE: // DEC Absolute, X
             {
-                uint16_t address = fetchWord() + xIndex;
+                uint16_t address = getAddress(AddressingMode::ABX);
                 uint8_t data = memory->read(address);
                 data--;
                 setZero(data == 0);
@@ -3878,6 +3884,18 @@ void CPU::execOnce() {
                 memory->write(address, data);
             }
             stepCpu(7);
+            break;
+
+        case 0xDF: // Illegal *DCP Absolute, X
+            {
+                uint16_t address = getAddress(AddressingMode::ABX);
+                uint8_t data = memory->read(address);
+                data--;
+                memory->write(address, data);
+                setCarry(accumulator >= data);
+                setZero((accumulator - data) == 0);
+                setNegative((accumulator - data) & 0x80);
+            }
             break;
 
         case 0xE0: // CPX Immediate
@@ -3913,7 +3931,7 @@ void CPU::execOnce() {
             fetch();
             break;
 
-        case 0xE3: // Illegal ISB Indexed, Indirect
+        case 0xE3: // Illegal *ISB Indexed, Indirect
             {
                 uint8_t addr = fetch();
                 uint16_t address = memory->read((addr + xIndex) & 0xff) + (uint16_t(memory->read((addr + xIndex + 1) & 0xff)) << 8);
@@ -3965,7 +3983,7 @@ void CPU::execOnce() {
             stepCpu(5);
             break;
 
-        case 0xE7: // Illegal ISB Zero Page
+        case 0xE7: // Illegal *ISB Zero Page
             {
                 uint16_t address = fetch();
                 uint8_t data = memory->read(address);
@@ -4052,7 +4070,7 @@ void CPU::execOnce() {
             stepCpu(6);
             break;
 
-        case 0xEF: // Illegal ISB Absolute
+        case 0xEF: // Illegal *ISB Absolute
             {
                 uint16_t address = fetchWord();
                 uint8_t data = memory->read(address);
@@ -4105,7 +4123,7 @@ void CPU::execOnce() {
             System::instance->stop = true;
             break;
 
-        case 0xF3: // Illegal ISB Indirect, Indexed
+        case 0xF3: // Illegal *ISB Indirect, Indexed
             {
                 uint8_t base = fetch();
                 uint16_t deref_base = (uint16_t(memory->read((base + 1) & 0xff)) << 8) | memory->read(base);
@@ -4150,7 +4168,7 @@ void CPU::execOnce() {
             stepCpu(6);
             break;
 
-        case 0xF7: // Illegal ISB Zero Page, X
+        case 0xF7: // Illegal *ISB Zero Page, X
             {
                 uint16_t address = getAddress(AddressingMode::ZPX);
                 uint8_t data = memory->read(address);
@@ -4190,7 +4208,7 @@ void CPU::execOnce() {
         case 0xFA: // Illegal NOP
             break;
 
-        case 0xFB: // Illegal ISB Absolute, Y
+        case 0xFB: // Illegal *ISB Absolute, Y
             {
                 uint16_t address = getAddress(AddressingMode::ABY);
                 uint8_t data = memory->read(address);
@@ -4238,7 +4256,7 @@ void CPU::execOnce() {
             stepCpu(7);
             break;
 
-        case 0xFF: // Illegal ISB Absolute, X
+        case 0xFF: // Illegal *ISB Absolute, X
             {
                 uint16_t address = fetchWord() + xIndex;
                 uint8_t data = memory->read(address);
