@@ -1,1 +1,2 @@
-obj/CPU.o: src/CPU.cpp include/CPU.hpp include/Bus.hpp include/System.hpp
+obj/CPU.o: src/CPU.cpp include/CPU.hpp include/Memory.hpp \
+ include/System.hpp

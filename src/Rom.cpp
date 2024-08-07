@@ -5,7 +5,7 @@
 
 using namespace Rom;
 
-void Rom::loadRom(const char* path, Bus* memory) {
+void Rom::loadRom(const char* path, Memory* memory) {
     std::ifstream file;
     file.open(path, std::ios::binary | std::ios::in);
 

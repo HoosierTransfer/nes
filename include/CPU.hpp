@@ -1,7 +1,28 @@
 #pragma once
 
 #include <cstdint>
-#include <Bus.hpp>
+#include <Memory.hpp>
+#include <vector>
+#include <string>
+
+#include <fstream>
+
+enum class AddressingMode {
+    IMP, // Implied
+    ACC, // Accumulator
+    IMM, // Immediate
+    ZP0, // Zero Page
+    ZPX, // Zero Page X
+    ZPY, // Zero Page Y
+    REL, // Relative
+    ABS, // Absolute
+    ABX, // Absolute X
+    ABY, // Absolute Y
+    IND, // Indirect
+    IZX, // Indexed Indirect X
+    IZY, // Indirect Indexed Y
+    NOP  // No Operation
+};
 
 class CPU {
 public:
@@ -14,9 +35,9 @@ public:
 
     uint64_t cycles;
 
-    Bus* memory;
+    Memory* memory;
 
-    CPU(Bus* memory);
+    CPU(Memory* memory);
 
     void powerOn();
     void reset();
@@ -56,7 +77,44 @@ public:
     void stepTo(uint64_t cycle);
 
     void execOnce();
+
+    std::string log();
+
+    std::string getInstruction();
+
+    std::string getAddressWithMode(AddressingMode mode);
+
+    uint16_t getAddressWithModeValue(AddressingMode mode);
+
+    uint16_t getAddress(AddressingMode mode);
 private:
     uint8_t fetch();
     uint16_t fetchWord();
+    uint8_t fetchNoAdvance();
+    uint16_t fetchWordNoAdvance();
+    std::vector<uint8_t> fetchLogs;
+
+    uint16_t oldPC;
+    uint16_t branchLocation;
+
+    std::ifstream knownGoodLog;
+
+    uint16_t oldAccumulator;
+    uint16_t oldXIndex;
+    uint16_t oldYIndex;
+    uint16_t oldStackPointer;
+    uint16_t oldFlags;
+
+    uint16_t oldOldAccumulator;
+    uint16_t oldOldXIndex;
+    uint16_t oldOldYIndex;
+    uint16_t oldOldStackPointer;
+    uint16_t oldOldFlags;
+
+    uint8_t miscValue;
+
+    int stepCountAfterFatalError;
+
+    uint8_t indirectAddr1;
+    uint16_t indirectAddr2;
 };

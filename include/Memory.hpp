@@ -16,4 +16,5 @@ public:
     void writeBytes(uint16_t address, uint8_t* data, long size);
 private:
     uint8_t* memory;
+    bool pageCrossed;
 };

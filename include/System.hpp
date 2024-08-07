@@ -3,7 +3,7 @@
 #include <cstdint>
 
 #include <CPU.hpp>
-#include <Bus.hpp>
+#include <Memory.hpp>
 
 class System {
 public:
@@ -12,7 +12,7 @@ public:
 
     CPU* cpu;
 
-    Bus* bus;
+    Memory* bus;
 
     uint64_t masterCycles;
     System();

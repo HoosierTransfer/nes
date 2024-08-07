@@ -37,73 +37,75 @@ SDL_Color getColor(uint8_t byte) {
 }
 
 int main() {
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
-        std::cerr << "Unable to initialize SDL: " << SDL_GetError() << std::endl;
-        return 1;
-    }
-
-    SDL_Window* window = SDL_CreateWindow("NES Emulator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 320, 320, SDL_WINDOW_SHOWN);
-    if (window == nullptr) {
-        std::cerr << "Unable to create window: " << SDL_GetError() << std::endl;
-        return 1;
-    }
-
-    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
-    if (renderer == nullptr) {
-        std::cerr << "Unable to create renderer: " << SDL_GetError() << std::endl;
-        return 1;
-    }
-
-    SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, 32, 32);
-
     System* system = new System();
+    system->run();
+    // if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+    //     std::cerr << "Unable to initialize SDL: " << SDL_GetError() << std::endl;
+    //     return 1;
+    // }
 
-    SDL_Event e;
-    bool quit = false;
+    // SDL_Window* window = SDL_CreateWindow("NES Emulator", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 320, 320, SDL_WINDOW_SHOWN);
+    // if (window == nullptr) {
+    //     std::cerr << "Unable to create window: " << SDL_GetError() << std::endl;
+    //     return 1;
+    // }
 
-    uint8_t frame[0x600 * 3];
+    // SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    // if (renderer == nullptr) {
+    //     std::cerr << "Unable to create renderer: " << SDL_GetError() << std::endl;
+    //     return 1;
+    // }
 
-    auto lastTime = std::chrono::high_resolution_clock::now();
+    // SDL_Texture* texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, 32, 32);
 
-    while (!quit) {
-        while (SDL_PollEvent(&e)) {
-            if (e.type == SDL_QUIT) {
-                quit = true;
-            }
+    // System* system = new System();
 
-            if (e.type == SDL_KEYDOWN) {
-                switch (e.key.keysym.sym) {
-                    case SDLK_r:
-                        for (int i = 0; i < 0x100; i++) {
-                            system->bus->write(rand() % 0xFFFF, rand() % 0xFF);
-                        }
-                        break;
-                }
-            }
-        }
+    // SDL_Event e;
+    // bool quit = false;
 
-        auto currentTime = std::chrono::high_resolution_clock::now();
-        std::chrono::duration<float> deltaTime = currentTime - lastTime;
-        lastTime = currentTime;
+    // uint8_t frame[0x600 * 3];
 
-        // if (update) {
-        //     SDL_UpdateTexture(texture, nullptr, frame, 32 * 3);
-        //     SDL_RenderCopy(renderer, texture, nullptr, nullptr);
-        //     SDL_RenderPresent(renderer);
-        // }
+    // auto lastTime = std::chrono::high_resolution_clock::now();
 
-        // use deltatime to control the speed of the emulator. we want the clock to run at 1.79 MHz
+    // while (!quit) {
+    //     while (SDL_PollEvent(&e)) {
+    //         if (e.type == SDL_QUIT) {
+    //             quit = true;
+    //         }
+
+    //         if (e.type == SDL_KEYDOWN) {
+    //             switch (e.key.keysym.sym) {
+    //                 case SDLK_r:
+    //                     for (int i = 0; i < 0x100; i++) {
+    //                         system->bus->write(rand() % 0xFFFF, rand() % 0xFF);
+    //                     }
+    //                     break;
+    //             }
+    //         }
+    //     }
+
+    //     auto currentTime = std::chrono::high_resolution_clock::now();
+    //     std::chrono::duration<float> deltaTime = currentTime - lastTime;
+    //     lastTime = currentTime;
+
+    //     // if (update) {
+    //     //     SDL_UpdateTexture(texture, nullptr, frame, 32 * 3);
+    //     //     SDL_RenderCopy(renderer, texture, nullptr, nullptr);
+    //     //     SDL_RenderPresent(renderer);
+    //     // }
+
+    //     // use deltatime to control the speed of the emulator. we want the clock to run at 1.79 MHz
     
-        for (int i = 0; i < 5; i++) {
-            system->step();
-        }
+    //     for (int i = 0; i < 5; i++) {
+    //         system->step();
+    //     }
 
-        SDL_RenderPresent(renderer);
-    }
+    //     SDL_RenderPresent(renderer);
+    // }
 
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    SDL_Quit();
+    // SDL_DestroyRenderer(renderer);
+    // SDL_DestroyWindow(window);
+    // SDL_Quit();
 
     return 0;
 }

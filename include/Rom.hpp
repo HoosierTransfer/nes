@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <Bus.hpp>
+#include <Memory.hpp>
 
 namespace Rom {
 struct nes_header
@@ -17,5 +17,5 @@ struct nes_header
     uint8_t reserved[5];    // reserved
 };
 
-void loadRom(const char* path, Bus* memory);
+void loadRom(const char* path, Memory* memory);
 }

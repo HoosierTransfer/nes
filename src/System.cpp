@@ -12,7 +12,7 @@ System::System() {
     instance = this;
     stop = false;
     masterCycles = 0;
-    bus = new Bus();
+    bus = new Memory();
     bus->Zero();
 
     Rom::loadRom("nestest.nes", bus);
@@ -44,7 +44,7 @@ System::System() {
 
 void System::run() {
     while (!stop) {
-        std::this_thread::sleep_for(std::chrono::microseconds(100));
+        // std::this_thread::sleep_for(std::chrono::microseconds(1000));
         step();
     }
 }
