@@ -19,6 +19,10 @@ public:
 
     void Zero();
 
+    void tickPPU(uint8_t cycles);
+
+    bool isNmiInterupt();
+
 private:
     uint8_t* cpuMemory;
     uint8_t* prgMemory;

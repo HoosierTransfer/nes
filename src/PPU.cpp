@@ -1,6 +1,8 @@
 #include <PPU.hpp>
 #include <stdexcept>
 
+#include <iostream>
+
 PPU::PPU() {
     this->chrRom = std::vector<uint8_t>();
     this->mirroring = Mirroring::HORIZONTAL;
@@ -12,7 +14,28 @@ PPU::PPU() {
     this->controlRegister = new ControlRegister();
     this->maskRegister = new MaskRegister();
     this->scrollRegister = new ScrollRegister();
+    this->statusRegister = new StatusRegister();
     this->dataBuffer = 0;
+
+    this->scanline = 0;
+    this->oamAddress = 0;
+
+    this->nmiInterupt = false;
+
+    // zero the data
+    for (int i = 0; i < 32; i++) {
+        paletteTable[i] = 0;
+    }
+
+    for (int i = 0; i < 2048; i++) {
+        vram[i] = 0;
+    }
+
+    for (int i = 0; i < 256; i++) {
+        oam[i] = 0;
+    }
+
+    this->cycles = 0;
 }
 
 void PPU::writeToAddressRegister(uint8_t data) {
@@ -20,8 +43,12 @@ void PPU::writeToAddressRegister(uint8_t data) {
 }
 
 void PPU::writeToControlRegister(uint8_t data) {
+    bool beforeNMIStatus = controlRegister->generateNMI();
     controlRegister->write(data);
-}
+    if (!beforeNMIStatus && controlRegister->generateNMI() && statusRegister->isVBlank()) {
+        nmiInterupt = true;
+    }
+}   
 
 void PPU::writeToMaskRegister(uint8_t data) {
     maskRegister->write(data);
@@ -65,25 +92,22 @@ uint8_t PPU::read() {
 
 void PPU::write(uint8_t data) {
     uint16_t address = addressRegister->get();
-    incrementVramAddress();
-
-    if (address == 0x3f10 || address == 0x3f14 || address == 0x3f18 || address == 0x3f1c) {
-        address -= 0x10;
-        paletteTable[address - 0x3F00] = data;
-        return;
-    }
 
     if (address < 0x2000) {
-        throw std::runtime_error("Cannot write to CHR ROM");
+        std::cerr << "Writing to CHR ROM" << std::endl;
     } else if (address < 0x3000) {
         vram[mirrorVramAddress(address)] = data;
     } else if (address < 0x3F00) {
         throw std::runtime_error("Invalid PPU write address");
+    } else if (address == 0x3F10 || address == 0x3F14 || address == 0x3F18 || address == 0x3F1C) {
+        address -= 0x10;
+        paletteTable[address - 0x3F00] = data;
     } else if (address < 0x4000) {
         paletteTable[address - 0x3F00] = data;
     } else {
         throw std::runtime_error("Invalid PPU write address");
     }
+    incrementVramAddress();
 }
 
 uint16_t PPU::mirrorVramAddress(uint16_t addr) {
@@ -151,16 +175,25 @@ bool PPU::tick(uint8_t cycles) {
         this->cycles -= 341;
         this->scanline++;
         if (this->scanline == 241) {
+            statusRegister->setVBlank(true);
+            statusRegister->setSpriteZeroHit(false);
             if (controlRegister->generateNMI()) {
                 statusRegister->setVBlank(true);
+                this->nmiInterupt = true;
             }
         }
 
         if (this->scanline == 262) {
             this->scanline = 0;
-            statusRegister->setVBlank(false);
+            this->nmiInterupt = false;
+            statusRegister->setSpriteZeroHit(false);
+            statusRegister->resetVBlank();
             return true;
         }
     }
     return false;
+}
+
+bool PPU::isNmiInterupt() {
+    return this->nmiInterupt;
 }

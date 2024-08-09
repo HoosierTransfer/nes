@@ -25,6 +25,12 @@ public:
 
     Mirroring mirroring;
 
+    AddressRegister* addressRegister;
+    ControlRegister* controlRegister;
+    MaskRegister* maskRegister;
+    ScrollRegister* scrollRegister;
+    StatusRegister* statusRegister;
+
     PPU();
 
     void writeToOAMAddress(uint8_t data);
@@ -49,12 +55,8 @@ public:
 
     bool tick(uint8_t cycles);
 
+    bool isNmiInterupt();
 private:
-    AddressRegister* addressRegister;
-    ControlRegister* controlRegister;
-    MaskRegister* maskRegister;
-    ScrollRegister* scrollRegister;
-    StatusRegister* statusRegister;
 
     uint16_t mirrorVramAddress(uint16_t address);
 
@@ -63,4 +65,6 @@ private:
 
     size_t cycles;
     uint16_t scanline;
+
+    bool nmiInterupt;
 };

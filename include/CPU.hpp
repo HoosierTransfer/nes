@@ -7,6 +7,8 @@
 
 #include <fstream>
 
+#include <Interrupt.hpp>
+
 enum class AddressingMode {
     IMP, // Implied
     ACC, // Accumulator
@@ -33,8 +35,6 @@ public:
     uint8_t stackPointer;
     uint8_t flags;
 
-    uint64_t cycles;
-
     Bus* memory;
 
     CPU(Bus* memory);
@@ -48,8 +48,8 @@ public:
     uint8_t getZero();
     void setZero(bool value);
 
-    uint8_t getInterrupt();
-    void setInterrupt(bool value);
+    uint8_t getInterruptDisable();
+    void setInterruptDisable(bool value);
 
     uint8_t getDecimal();
     void setDecimal(bool value);
@@ -87,7 +87,13 @@ public:
     uint16_t getAddressWithModeValue(AddressingMode mode);
 
     uint16_t getAddress(AddressingMode mode);
+
+    size_t getCycles();
+
+    void interrupt(const interrupt::Interrupt& interrupt);
+
 private:
+    size_t cycles;
     uint8_t fetch();
     uint16_t fetchWord();
     uint8_t fetchNoAdvance();

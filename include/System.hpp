@@ -16,7 +16,7 @@ public:
     PPU* ppu;
 
     uint64_t masterCycles;
-    System();
+    System(std::string romPath);
 
     void run();
 
