@@ -17,6 +17,22 @@ PPU::PPU() {
     addrRegister = new AddrRegister();
 
     dataBuffer = 0;
+    
+    for (int i = 0; i < 0x4000; i++) {
+        vram[i] = 0;
+    }
+
+    for (int i = 0; i < 0x100; i++) {
+        oam[i] = 0;
+    }
+
+    for (int i = 0; i < 0x20; i++) {
+        palette[i] = 0;
+    }
+
+    nmiInterrupt = false;
+    cycles = 0;
+    scanline = 0;
 }
 
 PPU::~PPU() {
@@ -73,8 +89,11 @@ void PPU::incrementVramAddress() {
 }
 
 void PPU::writeToControlRegister(uint8_t data) {
-    bool beforeNmi = this->controlRegister->generate_vblank_nmi();
+    bool beforeNmiStatus = this->controlRegister->generate_vblank_nmi();
     this->controlRegister->update(data);
+    if (!beforeNmiStatus && this->controlRegister->generate_vblank_nmi() && this->statusRegister->is_in_vblank()) {
+        this->nmiInterrupt = true;
+    }
 }
 
 void PPU::writeToMaskRegister(uint8_t data) {
@@ -163,6 +182,38 @@ uint8_t PPU::readFromDataRegister() {
 }
 
 
-void PPU::tick(int cycles) {
-    // Do nothing for now
+bool PPU::tick(uint8_t cycles) {
+    this->cycles += cycles;
+    if (this->cycles >= 341) {
+        this->cycles -= 341;
+        this->scanline++;
+
+        if (this->scanline == 241) {
+            this->statusRegister->set_vblank_status(true);
+            this->statusRegister->set_sprite_zero_hit(false);
+            if (this->controlRegister->generate_vblank_nmi()) {
+                this->nmiInterrupt = true;
+            }
+        }
+
+        if (this->scanline >= 262) {
+            this->scanline = 0;
+            this->nmiInterrupt = false;
+            
+            this->statusRegister->set_sprite_zero_hit(false);
+            this->statusRegister->reset_vblank_status();
+            
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool PPU::pollNmiInterrupt() {
+    if (this->nmiInterrupt) {
+        this->nmiInterrupt = false;
+        return true;
+    }
+    return false;
 }

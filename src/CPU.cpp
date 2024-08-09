@@ -8,10 +8,6 @@
 
 CPU::CPU(Bus* memory) {
     this->memory = memory;
-    knownGoodLog = std::ifstream("knownGoodNestestLog.txt");
-    if (!knownGoodLog.is_open()) {
-        std::cerr << "Failed to open knownGoodNestestLog.txt" << std::endl;
-    }
 }
 
 void CPU::powerOn() {
@@ -1650,7 +1646,7 @@ void CPU::interrupt(const interrupt::Interrupt& interrupt) {
     setIFlag((interrupt.b_flag_mask & 0b100000) == 0b100000);
     pushByte(flag);
     setInterruptDisable(true);
-    this->memory->tickPPU(interrupt.cpu_cycles * 3);
+    System::instance->stepThisAndPPU(interrupt.cpu_cycles);
     programCounter = memory->readWord(interrupt.vector_addr);
 }
 
@@ -1659,6 +1655,11 @@ void CPU::execOnce() {
     if (System::instance->stop) {
         return;
     }
+
+    if (bool nmiStatus = memory->pollNmiStatus(); nmiStatus) {
+        interrupt(interrupt::NMI);
+    }
+
     uint8_t opcode = fetch();
 
     switch (opcode) {
@@ -4174,6 +4175,4 @@ void CPU::execOnce() {
             System::instance->stop = true;
             break;
     }
-
-    std::cout << log() << std::endl;
 }

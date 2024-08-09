@@ -53,5 +53,24 @@ void System::run() {
 void System::step() {
     masterCycles++;
     cpu->execOnce();
+    bool nmiBefore = ppu->nmiInterrupt;
     ppu->tick(cpu->getCycles() * 3);
+    bool nmiAfter = ppu->nmiInterrupt;
+
+    if (!nmiBefore && nmiAfter) {
+        draw = true;
+    }
+}
+
+void System::stepThisAndPPU(uint8_t cycles) {
+    masterCycles += cycles;
+    ppu->tick(cycles * 3);
+}
+
+bool System::needsDraw() {
+    if (draw) {
+        draw = false;
+        return true;
+    }
+    return false;
 }

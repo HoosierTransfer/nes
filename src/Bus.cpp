@@ -112,7 +112,7 @@ uint8_t Bus::read(uint16_t address) {
     } if (address >= 0x8000 && address <= 0xFFFF) {
         return prgMemory[address - 0x8000];
     } else {
-        std::cerr << "Address not implemented" << std::endl;
+        // std::cerr << "Address not implemented" << std::endl;
         return 0;
     }
 }
@@ -143,8 +143,8 @@ void Bus::write(uint16_t address, uint8_t data) {
     } else if (address == 0x2007) {
         ppu->writeToDataRegister(data);
     } else if (address == 0x4014) {
-        uint8_t* buffer = new uint8_t[256];
-        uint8_t hi = data << 8;
+        uint8_t buffer[256] = {0};
+        uint16_t hi = static_cast<uint16_t>(data) << 8;
         for (int i = 0; i < 256; i++) {
             buffer[i] = read(hi + i);
         }
@@ -155,7 +155,7 @@ void Bus::write(uint16_t address, uint8_t data) {
     } else if (address >= 0x8000 && address <= 0xFFFF) {
         prgMemory[address - 0x8000] = data;
     } else {
-        std::cerr << "Address not implemented" << std::endl;
+        // std::cerr << "Address not implemented" << std::endl;
     }
 }
 
@@ -172,4 +172,8 @@ void Bus::writeBytes(uint16_t address, uint8_t* data, int size) {
 
 void Bus::tickPPU(uint8_t cycles) {
     ppu->tick(cycles);
+}
+
+bool Bus::pollNmiStatus() {
+    return ppu->pollNmiInterrupt();
 }

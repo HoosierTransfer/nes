@@ -21,4 +21,11 @@ public:
     void run();
 
     void step();
+
+    void stepThisAndPPU(uint8_t cycles);
+
+    bool needsDraw();
+
+private:
+    bool draw;
 };

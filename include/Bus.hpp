@@ -21,7 +21,7 @@ public:
 
     void tickPPU(uint8_t cycles);
 
-    bool isNmiInterupt();
+    bool pollNmiStatus();
 
 private:
     uint8_t* cpuMemory;

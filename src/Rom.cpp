@@ -33,7 +33,6 @@ void Rom::loadRom(const char* path, Bus* memory, PPU* ppu) {
 
     ppu->setChrRom(chr_rom, chrSize);
     ppu->setMirroring(verticalMirroring ? Mirroring::VERTICAL : Mirroring::HORIZONTAL);
-
     if (mapper == 0) {
         memory->writeBytes(0x8000, prg_rom, prgSize);
         if (prgSize == 0x4000) {

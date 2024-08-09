@@ -26,6 +26,8 @@ public:
     uint8_t oamAddr;
     Mirroring mirroring;
 
+    bool nmiInterrupt;
+
     ControlRegister* controlRegister;
     MaskRegister* maskRegister;
     StatusRegister* statusRegister;
@@ -35,7 +37,7 @@ public:
     PPU();
     ~PPU();
 
-    void tick(int cycles);
+    bool tick(uint8_t cycles);
 
     void setChrRom(uint8_t* chrRom, size_t size);
 
@@ -54,9 +56,14 @@ public:
     uint8_t readFromStatusRegister();
     uint8_t readFromOamData();
     uint8_t readFromDataRegister();
+
+    bool pollNmiInterrupt();
 private:
     uint8_t dataBuffer;
 
     uint16_t mirrorVramAddress(uint16_t address);
     void incrementVramAddress();
+
+    size_t cycles;
+    uint16_t scanline;
 };

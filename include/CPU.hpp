@@ -103,8 +103,6 @@ private:
     uint16_t oldPC;
     uint16_t branchLocation;
 
-    std::ifstream knownGoodLog;
-
     uint16_t oldAccumulator;
     uint16_t oldXIndex;
     uint16_t oldYIndex;
