@@ -1655,11 +1655,6 @@ void CPU::interrupt(const interrupt::Interrupt& interrupt) {
 }
 
 void CPU::execOnce() {
-    if (memory->isNmiInterupt()) {
-        interrupt(interrupt::NMI);
-        return;
-    }
-
     fetchLogs.clear();
     if (System::instance->stop) {
         return;

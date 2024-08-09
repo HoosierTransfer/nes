@@ -4,11 +4,12 @@
 #include <cstddef>
 
 #include <vector>
-#include <ppu/AddressRegister.hpp>
-#include <ppu/ControlRegister.hpp>
-#include <ppu/MaskRegister.hpp>
-#include <ppu/ScrollRegister.hpp>
-#include <ppu/StatusRegister.hpp>
+
+#include <ppuRegisters/AddrRegister.hpp>
+#include <ppuRegisters/ControlRegister.hpp>
+#include <ppuRegisters/MaskRegister.hpp>
+#include <ppuRegisters/StatusRegister.hpp>
+#include <ppuRegisters/ScrollRegister.hpp>
 
 enum class Mirroring {
     HORIZONTAL,
@@ -18,53 +19,44 @@ enum class Mirroring {
 
 class PPU {
 public:
-    std::vector<uint8_t> chrRom;
-    uint8_t* paletteTable;
     uint8_t* vram;
     uint8_t* oam;
-
+    uint8_t* palette;
+    std::vector<uint8_t> chrRom;
+    uint8_t oamAddr;
     Mirroring mirroring;
 
-    AddressRegister* addressRegister;
     ControlRegister* controlRegister;
     MaskRegister* maskRegister;
-    ScrollRegister* scrollRegister;
     StatusRegister* statusRegister;
+    ScrollRegister* scrollRegister;
+    AddrRegister* addrRegister;
 
     PPU();
+    ~PPU();
 
-    void writeToOAMAddress(uint8_t data);
-    void writeToAddressRegister(uint8_t data);
+    void tick(int cycles);
+
+    void setChrRom(uint8_t* chrRom, size_t size);
+
+    void setMirroring(Mirroring mirroring);
+
     void writeToControlRegister(uint8_t data);
     void writeToMaskRegister(uint8_t data);
+    void writeToOamAddress(uint8_t data);
+    void writeToOamData(uint8_t data);
     void writeToScrollRegister(uint8_t data);
+    void writeToAddrRegister(uint8_t data);
+    void writeToDataRegister(uint8_t data);
 
-    void incrementVramAddress();
+    void writeToOamDma(uint8_t* data);
 
-    uint8_t readStatusRegister();
-
-    uint8_t read();
-    uint8_t readOAMData();
-    void writeOAMData(uint8_t data);
-    void write(uint8_t data);
-
-    void writeOAMDMA(uint8_t* data);
-
-    void setChrRom(uint8_t* data, int size);
-    void setMirror(Mirroring mirror);
-
-    bool tick(uint8_t cycles);
-
-    bool isNmiInterupt();
+    uint8_t readFromStatusRegister();
+    uint8_t readFromOamData();
+    uint8_t readFromDataRegister();
 private:
+    uint8_t dataBuffer;
 
     uint16_t mirrorVramAddress(uint16_t address);
-
-    uint8_t dataBuffer;
-    uint8_t oamAddress;
-
-    size_t cycles;
-    uint16_t scanline;
-
-    bool nmiInterupt;
+    void incrementVramAddress();
 };

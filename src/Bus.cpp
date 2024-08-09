@@ -101,11 +101,11 @@ uint8_t Bus::read(uint16_t address) {
     } else if (address == 0x2000 || address == 0x2001 || address == 0x2003 || address == 0x2005 || address == 0x2006 || address == 0x4014) {
         throw std::runtime_error("Attempt to read from write-only PPU address");
     } else if (address == 0x2002) {
-        return ppu->readStatusRegister();
+        return ppu->readFromStatusRegister();
     } else if (address == 0x2004) {
-        return ppu->readOAMData();
+        return ppu->readFromOamData();
     } else if (address == 0x2007) {
-        return ppu->read();
+        return ppu->readFromDataRegister();
     } else if (address >= 0x2008 && address <= PPU_REGISTERS_MIRRORS_END) {
         uint16_t mirrorDown = address & 0x2007;
         return read(mirrorDown);
@@ -133,22 +133,22 @@ void Bus::write(uint16_t address, uint8_t data) {
     } else if (address == 0x2002) {
         throw std::runtime_error("Attempt to write to read-only PPU address");
     } else if (address == 0x2003) {
-        ppu->writeToOAMAddress(data);
+        ppu->writeToOamAddress(data);
     } else if (address == 0x2004) {
-        ppu->writeOAMData(data);
+        ppu->writeToOamData(data);
     } else if (address == 0x2005) {
         ppu->writeToScrollRegister(data);
     } else if (address == 0x2006) {
-        ppu->writeToAddressRegister(data);
+        ppu->writeToAddrRegister(data);
     } else if (address == 0x2007) {
-        ppu->write(data);
+        ppu->writeToDataRegister(data);
     } else if (address == 0x4014) {
         uint8_t* buffer = new uint8_t[256];
         uint8_t hi = data << 8;
         for (int i = 0; i < 256; i++) {
             buffer[i] = read(hi + i);
         }
-        ppu->writeOAMDMA(buffer);
+        ppu->writeToOamDma(buffer);
     } else if (address >= 0x2008 && address <= PPU_REGISTERS_MIRRORS_END) {
         uint16_t mirrorDown = address & 0x2007;
         write(mirrorDown, data);
@@ -172,8 +172,4 @@ void Bus::writeBytes(uint16_t address, uint8_t* data, int size) {
 
 void Bus::tickPPU(uint8_t cycles) {
     ppu->tick(cycles);
-}
-
-bool Bus::isNmiInterupt() {
-    return ppu->isNmiInterupt();
 }
