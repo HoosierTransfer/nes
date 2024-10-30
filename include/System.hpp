@@ -5,6 +5,8 @@
 #include <CPU.hpp>
 #include <Bus.hpp>
 #include <PPU.hpp>
+#include <APU.hpp>
+#include <Joypad.hpp>
 
 class System {
 public:
@@ -14,6 +16,8 @@ public:
     CPU* cpu;
     Bus* bus;
     PPU* ppu;
+    APU* apu;
+    Joypad* joypad;
 
     uint64_t masterCycles;
     System(std::string romPath);

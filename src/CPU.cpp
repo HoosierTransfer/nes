@@ -4175,4 +4175,6 @@ void CPU::execOnce() {
             System::instance->stop = true;
             break;
     }
+
+    std::cout << log() << std::endl;
 }

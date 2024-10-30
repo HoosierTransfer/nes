@@ -13,7 +13,9 @@ System::System(std::string romPath) {
     stop = false;
     masterCycles = 0;
     ppu = new PPU();
-    bus = new Bus(ppu);
+    apu = new APU();
+    joypad = new Joypad();
+    bus = new Bus(ppu, apu, joypad);
     bus->Zero();
 
     Rom::loadRom(romPath.c_str(), bus, ppu);
@@ -50,7 +52,14 @@ void System::run() {
     }
 }
 
+void waitNanoSeconds(int ns) {
+    auto start = std::chrono::high_resolution_clock::now();
+    while (std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::high_resolution_clock::now() - start).count() < ns) {
+    }
+}
+
 void System::step() {
+    auto start = std::chrono::high_resolution_clock::now();
     masterCycles++;
     cpu->execOnce();
     bool nmiBefore = ppu->nmiInterrupt;
@@ -60,6 +69,10 @@ void System::step() {
     if (!nmiBefore && nmiAfter) {
         draw = true;
     }
+
+    auto end = std::chrono::high_resolution_clock::now();
+    auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+    waitNanoSeconds(558 - duration);
 }
 
 void System::stepThisAndPPU(uint8_t cycles) {

@@ -3,10 +3,12 @@
 #include <cstdint>
 
 #include <PPU.hpp>
+#include <APU.hpp>
+#include <Joypad.hpp>
 
 class Bus {
 public:
-    Bus(PPU* ppu);
+    Bus(PPU* ppu, APU* apu, Joypad* joypad);
     ~Bus();
 
     void write(uint16_t address, uint8_t data);
@@ -27,4 +29,6 @@ private:
     uint8_t* cpuMemory;
     uint8_t* prgMemory;
     PPU* ppu;
+    APU* apu;
+    Joypad* joypad;
 };

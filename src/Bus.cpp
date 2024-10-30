@@ -75,10 +75,12 @@
 #define PPU_REGISTERS 0x2000
 #define PPU_REGISTERS_MIRRORS_END 0x3FFF
 
-Bus::Bus(PPU* ppu) {
+Bus::Bus(PPU* ppu, APU* apu, Joypad* joypad) {
     cpuMemory = new uint8_t[2048];
     prgMemory = new uint8_t[0xFFFF-0x8000];
     this->ppu = ppu;
+    this->apu = apu;
+    this->joypad = joypad;
 }   
 
 Bus::~Bus() {
@@ -109,7 +111,11 @@ uint8_t Bus::read(uint16_t address) {
     } else if (address >= 0x2008 && address <= PPU_REGISTERS_MIRRORS_END) {
         uint16_t mirrorDown = address & 0x2007;
         return read(mirrorDown);
-    } if (address >= 0x8000 && address <= 0xFFFF) {
+    } else if (address == 0x4015) {
+        return apu->readStatus();
+    } else if (address == 0x4016) {
+        return joypad->read();
+    } else if (address >= 0x8000 && address <= 0xFFFF) {
         return prgMemory[address - 0x8000];
     } else {
         // std::cerr << "Address not implemented" << std::endl;
@@ -152,6 +158,10 @@ void Bus::write(uint16_t address, uint8_t data) {
     } else if (address >= 0x2008 && address <= PPU_REGISTERS_MIRRORS_END) {
         uint16_t mirrorDown = address & 0x2007;
         write(mirrorDown, data);
+    } else if (address == 0x4015) {
+        apu->writeStatus(data);
+    } else if (address == 0x4016) {
+        joypad->write(data);
     } else if (address >= 0x8000 && address <= 0xFFFF) {
         prgMemory[address - 0x8000] = data;
     } else {

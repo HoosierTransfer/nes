@@ -217,9 +217,11 @@ uint8_t* render(PPU* ppu) {
     return frame;
 }
 
+#define SAMPLE_RATE 44100
+
 int main() {
     // init sdl
-    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
         std::cerr << "SDL_Init Error: " << SDL_GetError() << std::endl;
         return 1;
     }
@@ -270,6 +272,63 @@ int main() {
             if (event.type == SDL_QUIT) {
                 running = false;
             }
+
+            if (event.type == SDL_KEYDOWN) {
+                switch (event.key.keysym.sym) {
+                    case SDLK_UP:
+                        system.joypad->setButtonState(JOYPAD_UP, true);
+                        break;
+                    case SDLK_DOWN:
+                        system.joypad->setButtonState(JOYPAD_DOWN, true);
+                        break;
+                    case SDLK_LEFT:
+                        system.joypad->setButtonState(JOYPAD_LEFT, true);
+                        break;
+                    case SDLK_RIGHT:
+                        system.joypad->setButtonState(JOYPAD_RIGHT, true);
+                        break;
+                    case SDLK_z:
+                        system.joypad->setButtonState(JOYPAD_A, true);
+                        break;
+                    case SDLK_x:
+                        system.joypad->setButtonState(JOYPAD_B, true);
+                        break;
+                    case SDLK_RETURN:
+                        system.joypad->setButtonState(JOYPAD_START, true);
+                        break;
+                    case SDLK_RSHIFT:
+                        system.joypad->setButtonState(JOYPAD_SELECT, true);
+                        break;
+                }
+            }
+            if (event.type == SDL_KEYUP) {
+                switch (event.key.keysym.sym) {
+                    case SDLK_UP:
+                        system.joypad->setButtonState(JOYPAD_UP, false);
+                        break;
+                    case SDLK_DOWN:
+                        system.joypad->setButtonState(JOYPAD_DOWN, false);
+                        break;
+                    case SDLK_LEFT:
+                        system.joypad->setButtonState(JOYPAD_LEFT, false);
+                        break;
+                    case SDLK_RIGHT:
+                        system.joypad->setButtonState(JOYPAD_RIGHT, false);
+                        break;
+                    case SDLK_z:
+                        system.joypad->setButtonState(JOYPAD_A, false);
+                        break;
+                    case SDLK_x:
+                        system.joypad->setButtonState(JOYPAD_B, false);
+                        break;
+                    case SDLK_RETURN:
+                        system.joypad->setButtonState(JOYPAD_START, false);
+                        break;
+                    case SDLK_RSHIFT:
+                        system.joypad->setButtonState(JOYPAD_SELECT, false);
+                        break;
+                }
+            }
         }
 
         system.step();
@@ -286,6 +345,7 @@ int main() {
         }
     }
 
+    SDL_CloseAudio();
     SDL_DestroyTexture(texture);
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
